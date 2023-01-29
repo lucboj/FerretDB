@@ -18,10 +18,30 @@ import (
 	"context"
 
 	"github.com/FerretDB/FerretDB/internal/handlers/common"
+	"github.com/FerretDB/FerretDB/internal/types"
+	"github.com/FerretDB/FerretDB/internal/util/lazyerrors"
+	"github.com/FerretDB/FerretDB/internal/util/must"
 	"github.com/FerretDB/FerretDB/internal/wire"
 )
 
 // MsgCreateIndexes implements HandlerInterface.
 func (h *Handler) MsgCreateIndexes(ctx context.Context, msg *wire.OpMsg) (*wire.OpMsg, error) {
-	return nil, common.NewCommandErrorMsg(common.ErrNotImplemented, "`collMod` command is not implemented yet")
+	document, err := msg.Document()
+	if err != nil {
+		return nil, err
+	}
+
+	common.Ignored(document, h.L, "writeConcern", "commitQuorum", "comment")
+
+	var reply wire.OpMsg
+	err = reply.SetSections(wire.OpMsgSection{
+		Documents: []*types.Document{must.NotFail(types.NewDocument(
+			"ok", float64(1),
+		))},
+	})
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	return &reply, nil
 }
