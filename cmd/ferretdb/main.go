@@ -71,6 +71,8 @@ var cli struct {
 
 	PostgreSQLURL string `name:"postgresql-url" default:"${default_postgresql_url}" help:"PostgreSQL URL for 'pg' handler."`
 
+	HANAInstanceURL string `name:"hanainstance-url" help:"HANA instance URL for 'hana' handler"`
+
 	// Put flags for other handlers there, between --postgresql-url and --version in the help output.
 	kong.Plugins
 
@@ -304,6 +306,8 @@ func run() {
 		TigrisClientSecret: tigrisFlags.TigrisClientSecret,
 		TigrisToken:        tigrisFlags.TigrisToken,
 		TigrisURL:          tigrisFlags.TigrisURL,
+
+		HANAInstanceURL: cli.HANAInstanceURL,
 	})
 	if err != nil {
 		logger.Fatal(err.Error())

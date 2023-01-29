@@ -314,6 +314,18 @@ tasks:
         --proxy-addr=127.0.0.1:37017
         --test-records-dir=records
 
+  run-hana:
+    deps: [build-testcover]
+    cmds:
+      - >
+        bin/ferretdb-testcover{{exeExt}} -test.coverprofile=cover.txt --
+        --handler=hana
+        --listen-addr=:27017
+        --mode=diff-normal
+        --hanainstance-url=not-given
+        --proxy-addr=127.0.0.1:37017
+        --test-records-dir=records
+
   run-proxy:
     desc: "Run FerretDB in diff-proxy mode"
     deps: [build-testcover]

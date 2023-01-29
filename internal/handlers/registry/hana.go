@@ -17,10 +17,20 @@
 package registry
 
 import (
-	_ "github.com/SAP/go-hdb/driver" // register database/sql driver
+	// _ "github.com/SAP/go-hdb/driver" // register database/sql driver
+	"github.com/FerretDB/FerretDB/internal/handlers"
+	"github.com/FerretDB/FerretDB/internal/handlers/hana"
 )
 
 // init registers "hana" handler for Hana when "ferretdb_hana" build tag is provided.
 func init() {
-	// TODO
+	registry["hana"] = func(opts *NewHandlerOpts) (handlers.Interface, error) {
+		handlerOpts := &hana.NewOpts{
+			HANAInstanceURL: opts.HANAInstanceURL,
+			L:               opts.Logger,
+			Metrics:         opts.Metrics,
+			StateProvider:   opts.StateProvider,
+		}
+		return hana.New(handlerOpts)
+	}
 }
