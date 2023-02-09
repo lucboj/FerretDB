@@ -36,7 +36,7 @@ type queryCompatTestCase struct {
 	resultPushdown     bool                     // defaults to false
 	skipTigrisPushdown bool                     // defaults to false
 	skipForTigris      string                   // skip test for Tigris
-	skip               string                   // skip test for all backends, must have issue number mentioned
+	skip               string                   // skip test for all handlers, must have issue number mentioned
 }
 
 // testQueryCompat tests query compatibility test cases.
@@ -223,9 +223,8 @@ func testQueryCompatBasic() map[string]queryCompatTestCase {
 			resultPushdown: true,
 		},
 		"ObjectID": {
-			filter:             bson.D{{"v", primitive.NilObjectID}},
-			resultPushdown:     true,
-			skipTigrisPushdown: true,
+			filter:         bson.D{{"v", primitive.NilObjectID}},
+			resultPushdown: true,
 		},
 		"UnknownFilterOperator": {
 			filter:     bson.D{{"v", bson.D{{"$someUnknownOperator", 42}}}},
