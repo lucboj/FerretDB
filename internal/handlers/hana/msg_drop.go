@@ -16,12 +16,71 @@ package hana
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/FerretDB/FerretDB/internal/handlers/common"
+	"github.com/FerretDB/FerretDB/internal/handlers/hana/hanadb"
+	"github.com/FerretDB/FerretDB/internal/types"
+	"github.com/FerretDB/FerretDB/internal/util/lazyerrors"
+	"github.com/FerretDB/FerretDB/internal/util/must"
 	"github.com/FerretDB/FerretDB/internal/wire"
 )
 
 // MsgDrop implements HandlerInterface.
 func (h *Handler) MsgDrop(ctx context.Context, msg *wire.OpMsg) (*wire.OpMsg, error) {
-	return nil, common.NewCommandErrorMsg(common.ErrNotImplemented, "`collMod` command is not implemented yet")
+	dbPool, err := h.DBPool(ctx)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	document, err := msg.Document()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	common.Ignored(document, h.L, "writeConcern", "comment")
+
+	command := document.Command()
+
+	db, err := common.GetRequiredParam[string](document, "$db")
+	if err != nil {
+		return nil, err
+	}
+
+	collection, err := common.GetRequiredParam[string](document, command)
+	if err != nil {
+		return nil, err
+	}
+
+	// err = dbPool.InTransaction(ctx, func(tx pgx.Tx) error {
+	// 	return pgdb.DropCollection(ctx, tx, db, collection)
+	// })
+
+	err = dbPool.DropCollection(ctx, db, collection)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	switch {
+	case err == nil:
+		// nothing
+	case errors.Is(err, hanadb.ErrSchemaNotExist), errors.Is(err, hanadb.ErrTableNotExist):
+		return nil, common.NewCommandErrorMsg(common.ErrNamespaceNotFound, "ns not found")
+	default:
+		return nil, lazyerrors.Error(err)
+	}
+
+	var reply wire.OpMsg
+	must.NoError(reply.SetSections(wire.OpMsgSection{
+		Documents: []*types.Document{must.NotFail(types.NewDocument(
+			"nIndexesWas", int32(1), // TODO
+			"ns", db+"."+collection,
+			"ok", float64(1),
+		))},
+	}))
+
+	return &reply, nil
 }

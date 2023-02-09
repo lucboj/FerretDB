@@ -87,24 +87,23 @@ func (hdb *Pool) databaseExists(ctx context.Context, db string) (bool, error) {
 // DropDatabase drops FerretDB database.
 //
 // It returns ErrSchemaNotExist if schema does not exist.
-// func DropDatabase(ctx context.Context, tx pgx.Tx, db string) error {
-// 	_, err := tx.Exec(ctx, `DROP SCHEMA `+pgx.Identifier{db}.Sanitize()+` CASCADE`)
-// 	if err == nil {
-// 		return nil
-// 	}
+func (hdb *Pool) DropDatabase(ctx context.Context, db string) error {
 
-// 	pgErr, ok := err.(*pgconn.PgError)
-// 	if !ok {
-// 		return lazyerrors.Error(err)
-// 	}
+	dbExists, err := hdb.databaseExists(ctx, db)
+	if err != nil {
+		return err
+	}
 
-// 	switch pgErr.Code {
-// 	case pgerrcode.InvalidSchemaName:
-// 		return ErrSchemaNotExist
-// 	default:
-// 		return lazyerrors.Error(err)
-// 	}
-// }
+	if !dbExists {
+		return ErrSchemaNotExist
+	}
+
+	sql := fmt.Sprintf("DROP SCHEMA \"%s\" CASCADE", db)
+
+	_, err = hdb.ExecContext(ctx, sql)
+
+	return err
+}
 
 // // DatabaseSize returns the size of the current database in bytes.
 // func DatabaseSize(ctx context.Context, tx pgx.Tx) (int64, error) {

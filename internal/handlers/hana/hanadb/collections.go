@@ -78,6 +78,32 @@ func (hdb *Pool) createCollection(ctx context.Context, db, collection string) er
 	return err
 }
 
+func (hdb *Pool) DropCollection(ctx context.Context, db, collection string) error {
+	schemaExists, err := hdb.databaseExists(ctx, db)
+	if err != nil {
+		return lazyerrors.Error(err)
+	}
+
+	if !schemaExists {
+		return ErrSchemaNotExist
+	}
+
+	collectionExists, err := hdb.collectionExists(ctx, db, collection)
+	if err != nil {
+		return lazyerrors.Error(err)
+	}
+
+	if !collectionExists {
+		return ErrTableNotExist
+	}
+
+	sql := fmt.Sprintf("DROP COLLECTION \"%s\".\"%s\"", db, collection)
+
+	_, err = hdb.ExecContext(ctx, sql)
+
+	return err
+}
+
 func (hdb *Pool) Collections(ctx context.Context, db string) ([]string, error) {
 	if _, err := hdb.CreateDatabaseIfNotExists(ctx, db); err != nil && err != ErrAlreadyExist {
 		return nil, lazyerrors.Errorf("Handler.msgStorage: %w", err)
