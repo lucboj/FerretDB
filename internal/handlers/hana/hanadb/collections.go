@@ -29,6 +29,12 @@ func (hdb *Pool) CreateCollectionIfNotExists(ctx context.Context, db, collection
 	}
 
 	var err error
+
+	_, err = hdb.CreateDatabaseIfNotExists(ctx, db)
+	if err != nil {
+		return err
+	}
+
 	exists, err := hdb.collectionExists(ctx, db, collection)
 	if err != nil {
 		return err
@@ -65,9 +71,37 @@ func (hdb *Pool) collectionExists(ctx context.Context, db, collection string) (b
 
 // TODO: catch and use error for collection already existing
 func (hdb *Pool) createCollection(ctx context.Context, db, collection string) error {
-	sql := fmt.Sprintf("CREATE COLLECTION \"%s\".\"%s\"")
+	sql := fmt.Sprintf("CREATE COLLECTION \"%s\".\"%s\"", db, collection)
 
 	_, err := hdb.ExecContext(ctx, sql)
 
 	return err
+}
+
+func (hdb *Pool) Collections(ctx context.Context, db string) ([]string, error) {
+	if _, err := hdb.CreateDatabaseIfNotExists(ctx, db); err != nil && err != ErrAlreadyExist {
+		return nil, lazyerrors.Errorf("Handler.msgStorage: %w", err)
+	}
+
+	sql := "SELECT TABLE_NAME FROM \"PUBLIC\".\"M_TABLES\" WHERE SCHEMA_NAME = $1 AND TABLE_TYPE = 'COLLECTION';"
+	rows, err := hdb.QueryContext(ctx, sql, db)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+	defer rows.Close()
+
+	var collections []string
+	for rows.Next() {
+		var name string
+		if err = rows.Scan(&name); err != nil {
+			return nil, lazyerrors.Error(err)
+		}
+
+		collections = append(collections, name)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	return collections, nil
 }

@@ -14,6 +14,9 @@ type Pool struct {
 }
 
 func NewPool(ctx context.Context, url string, logger *zap.Logger) (*Pool, error) {
+	fmt.Println("-----------------------")
+	fmt.Println(url)
+	fmt.Println("-----------------------")
 
 	pool, err := sql.Open("hdb", url)
 	if err != nil {

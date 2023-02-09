@@ -30,13 +30,13 @@ import (
 // schema describes document/object schema needed to unmarshal hjson document.
 type schema struct {
 	Properties map[string]*elem `json:"p"`  // document's properties
-	Keys       []string         `json:"$k"` // to preserve properties' order
+	Keys       []string         `json:"&k"` // to preserve properties' order
 }
 
 // elem describes an element of schema.
 type elem struct {
 	Type    elemType             `json:"t"`            // for each field
-	Schema  *schema              `json:"$s,omitempty"` // only for objects
+	Schema  *schema              `json:"&s,omitempty"` // only for objects
 	Options *string              `json:"o,omitempty"`  // only for regex
 	Items   []*elem              `json:"i,omitempty"`  // only for arrays
 	Subtype *types.BinarySubtype `json:"s,omitempty"`  // only for binData
@@ -140,7 +140,7 @@ func marshalSchemaForDoc(td *types.Document) ([]byte, error) {
 		buf.Write(b)
 	}
 
-	buf.WriteString(`},"$k":`)
+	buf.WriteString(`},"&k":`)
 
 	b, err := json.Marshal(keys)
 	if err != nil {
@@ -162,7 +162,7 @@ func marshalElemForSingleValue(value any) ([]byte, error) {
 	case *types.Document:
 		buf.WriteString(`{"t":"object"`)
 
-		buf.WriteString(`,"$s":`)
+		buf.WriteString(`,"&s":`)
 
 		b, err := marshalSchemaForDoc(val)
 		if err != nil {

@@ -19,7 +19,7 @@ type SQLParam struct {
 
 func (hdb *Pool) GetDocuments(ctx context.Context, SQLParam *SQLParam) ([]*types.Document, error) {
 
-	query := fmt.Sprintf("SELECT * FROM %s.\"%s\"", SQLParam.DB, SQLParam.Collection)
+	query := fmt.Sprintf("SELECT * FROM \"%s\".\"%s\"", SQLParam.DB, SQLParam.Collection)
 
 	rows, err := hdb.QueryContext(ctx, query)
 	if err != nil {
@@ -30,6 +30,9 @@ func (hdb *Pool) GetDocuments(ctx context.Context, SQLParam *SQLParam) ([]*types
 	var d []byte
 
 	for rows.Next() {
+		if err := rows.Scan(&d); err != nil {
+			return nil, lazyerrors.Error(err)
+		}
 		doc, err := hjson.Unmarshal(d)
 		if err != nil {
 			return nil, lazyerrors.Error(err)

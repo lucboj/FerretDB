@@ -18,10 +18,73 @@ import (
 	"context"
 
 	"github.com/FerretDB/FerretDB/internal/handlers/common"
+	"github.com/FerretDB/FerretDB/internal/types"
+	"github.com/FerretDB/FerretDB/internal/util/lazyerrors"
+	"github.com/FerretDB/FerretDB/internal/util/must"
 	"github.com/FerretDB/FerretDB/internal/wire"
 )
 
 // MsgCreate implements HandlerInterface.
 func (h *Handler) MsgCreate(ctx context.Context, msg *wire.OpMsg) (*wire.OpMsg, error) {
-	return nil, common.NewCommandErrorMsg(common.ErrNotImplemented, "`collMod` command is not implemented yet")
+	dbPool, err := h.DBPool(ctx)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	document, err := msg.Document()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	unimplementedFields := []string{
+		"capped",
+		"timeseries",
+		"expireAfterSeconds",
+		"size",
+		"max",
+		"validationLevel",
+		"validationAction",
+		"viewOn",
+		"pipeline",
+		"collation",
+	}
+	if err := common.Unimplemented(document, unimplementedFields...); err != nil {
+		return nil, err
+	}
+
+	ignoredFields := []string{
+		"autoIndexId",
+		"storageEngine",
+		"indexOptionDefaults",
+		"writeConcern",
+		"comment",
+	}
+	common.Ignored(document, h.L, ignoredFields...)
+
+	command := document.Command()
+
+	db, err := common.GetRequiredParam[string](document, "$db")
+	if err != nil {
+		return nil, err
+	}
+
+	collection, err := common.GetRequiredParam[string](document, command)
+	if err != nil {
+		return nil, err
+	}
+
+	err = dbPool.CreateCollectionIfNotExists(ctx, db, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	var reply wire.OpMsg
+	must.NoError(reply.SetSections(wire.OpMsgSection{
+		Documents: []*types.Document{must.NotFail(types.NewDocument(
+			"ok", float64(1),
+		))},
+	}))
+
+	return &reply, nil
+
 }

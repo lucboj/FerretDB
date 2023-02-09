@@ -20,13 +20,13 @@ import (
 	"fmt"
 
 	"github.com/FerretDB/FerretDB/internal/handlers/common"
+	"github.com/FerretDB/FerretDB/internal/handlers/commonerrors"
 	"github.com/FerretDB/FerretDB/internal/handlers/hana/hanadb"
 	"github.com/FerretDB/FerretDB/internal/handlers/pg/pgdb"
 	"github.com/FerretDB/FerretDB/internal/types"
 	"github.com/FerretDB/FerretDB/internal/util/lazyerrors"
 	"github.com/FerretDB/FerretDB/internal/util/must"
 	"github.com/FerretDB/FerretDB/internal/wire"
-	"github.com/jackc/pgx/v4"
 )
 
 // MsgInsert implements HandlerInterface.
@@ -56,8 +56,8 @@ func (h *Handler) MsgInsert(ctx context.Context, msg *wire.OpMsg) (*wire.OpMsg, 
 
 	var ok bool
 	if sp.Collection, ok = collectionParam.(string); !ok {
-		return nil, common.NewCommandErrorMsgWithArgument(
-			common.ErrBadValue,
+		return nil, commonerrors.NewCommandErrorMsgWithArgument(
+			commonerrors.ErrBadValue,
 			fmt.Sprintf("collection name has invalid type %s", common.AliasFromType(collectionParam)),
 			document.Command(),
 		)
@@ -103,7 +103,7 @@ func (h *Handler) MsgInsert(ctx context.Context, msg *wire.OpMsg) (*wire.OpMsg, 
 // If insert is unordered, a document fails to insert, handling of the remaining documents will be continued.
 //
 // It always returns the number of successfully inserted documents and a document with errors.
-func insertMany(ctx context.Context, dbPool *hanadb.Pool, sp *pgdb.SQLParam, docs *types.Array, ordered bool) (int32, *common.WriteErrors) { //nolint:lll // argument list is too long
+func insertMany(ctx context.Context, dbPool *hanadb.Pool, sp *hanadb.SQLParam, docs *types.Array, ordered bool) (int32, *common.WriteErrors) { //nolint:lll // argument list is too long
 	var inserted int32
 	var insErrors common.WriteErrors
 
@@ -133,18 +133,16 @@ func insertMany(ctx context.Context, dbPool *hanadb.Pool, sp *pgdb.SQLParam, doc
 }
 
 // insertDocument prepares and executes actual INSERT request to Postgres.
-func insertDocument(ctx context.Context, dbPool *hanadb.Pool, sp *pgdb.SQLParam, doc any) error {
+func insertDocument(ctx context.Context, dbPool *hanadb.Pool, sp *hanadb.SQLParam, doc any) error {
 	d, ok := doc.(*types.Document)
 	if !ok {
-		return common.NewCommandErrorMsg(
-			common.ErrBadValue,
+		return commonerrors.NewCommandErrorMsg(
+			commonerrors.ErrBadValue,
 			fmt.Sprintf("document has invalid type %s", common.AliasFromType(doc)),
 		)
 	}
 
-	err := dbPool.InTransactionRetry(ctx, func(tx pgx.Tx) error {
-		return pgdb.InsertDocument(ctx, tx, sp.DB, sp.Collection, d)
-	})
+	err := dbPool.InsertDocument(ctx, sp.DB, sp.Collection, d)
 	if err == nil {
 		return nil
 	}
@@ -154,5 +152,5 @@ func insertDocument(ctx context.Context, dbPool *hanadb.Pool, sp *pgdb.SQLParam,
 		return common.NewCommandErrorMsg(common.ErrInvalidNamespace, msg)
 	}
 
-	return common.CheckError(err)
+	return commonerrors.CheckError(err)
 }

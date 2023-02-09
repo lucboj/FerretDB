@@ -19,11 +19,11 @@
 // # Mapping
 //
 // hjson uses schema to map values to data types.
-// Schema is stored in the `$s` field of the document and contains information about the fields.
+// Schema is stored in the `&s` field of the document and contains information about the fields.
 // A document with schema looks like this:
 //
 //	{
-//	   "$s": {
+//	   "&s": {
 //	     "$k": ["field1", "field2", ...],
 //	     "p": {
 //	       "field1": {<schema>},
@@ -39,7 +39,7 @@
 //
 //	Alias      types package    hjson package        hjson schema                                            JSON representation
 //
-//	object     *types.Document  *hjson.documentType  {"t":"object", "$s": {"$k":[<keys>], "p":{<properties>}} JSON object
+//	object     *types.Document  *hjson.documentType  {"t":"object", "&s": {"$k":[<keys>], "p":{<properties>}} JSON object
 //	array      *types.Array     *hjson.arrayType     {"t":"array", "i": [<item 1>, <item 2>]}                JSON array
 //
 // Scalar types
@@ -174,7 +174,7 @@ func tohjson(v any) hjsontype {
 }
 
 // Unmarshal decodes the top-level document.
-// It decodes document's schema from the `$s` field and uses it to decode the data of the document.
+// It decodes document's schema from the `&s` field and uses it to decode the data of the document.
 func Unmarshal(data []byte) (*types.Document, error) {
 	var v map[string]json.RawMessage
 	r := bytes.NewReader(data)
@@ -189,8 +189,8 @@ func Unmarshal(data []byte) (*types.Document, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	// decode schema from the $s field of the document
-	jsch, ok := v["$s"]
+	// decode schema from the &s field of the document
+	jsch, ok := v["&s"]
 	if !ok {
 		return nil, lazyerrors.Errorf("schema is not set")
 	}
@@ -208,7 +208,7 @@ func Unmarshal(data []byte) (*types.Document, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	delete(v, "$s")
+	delete(v, "&s")
 
 	// decode data from the rest of the document using the schema
 	if len(sch.Keys) != len(v) {
@@ -333,7 +333,7 @@ func unmarshalSingleValue(data []byte, sch *elem) (any, error) {
 	return fromhjson(res), nil
 }
 
-// Marshal encodes the given document and set its schema in the field $s.
+// Marshal encodes the given document and set its schema in the field &s.
 // Use it when you need to encode a document with schema, for example, when you want to store it in a database.
 func Marshal(d *types.Document) ([]byte, error) {
 	if d == nil {
@@ -347,7 +347,7 @@ func Marshal(d *types.Document) ([]byte, error) {
 
 	var buf bytes.Buffer
 
-	buf.WriteString(`{"$s":`)
+	buf.WriteString(`{"&s":`)
 	buf.Write(schema)
 
 	keys := d.Keys()
