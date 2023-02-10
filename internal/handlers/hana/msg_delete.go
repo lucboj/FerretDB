@@ -16,12 +16,223 @@ package hana
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/FerretDB/FerretDB/internal/handlers/common"
+	"github.com/FerretDB/FerretDB/internal/handlers/hana/hanadb"
+	"github.com/FerretDB/FerretDB/internal/types"
+	"github.com/FerretDB/FerretDB/internal/util/lazyerrors"
+	"github.com/FerretDB/FerretDB/internal/util/must"
 	"github.com/FerretDB/FerretDB/internal/wire"
 )
 
 // MsgDelete implements HandlerInterface.
 func (h *Handler) MsgDelete(ctx context.Context, msg *wire.OpMsg) (*wire.OpMsg, error) {
-	return nil, common.NewCommandErrorMsg(common.ErrNotImplemented, "`collMod` command is not implemented yet")
+	dbPool, err := h.DBPool(ctx)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	document, err := msg.Document()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	if err := common.Unimplemented(document, "let"); err != nil {
+		return nil, err
+	}
+
+	common.Ignored(document, h.L, "writeConcern")
+
+	var deletes *types.Array
+	if deletes, err = common.GetOptionalParam(document, "deletes", deletes); err != nil {
+		return nil, err
+	}
+
+	ordered := true
+	if ordered, err = common.GetOptionalParam(document, "ordered", ordered); err != nil {
+		return nil, err
+	}
+
+	var sp hanadb.SQLParam
+
+	if sp.DB, err = common.GetRequiredParam[string](document, "$db"); err != nil {
+		return nil, err
+	}
+
+	collectionParam, err := document.Get(document.Command())
+	if err != nil {
+		return nil, err
+	}
+
+	var ok bool
+	if sp.Collection, ok = collectionParam.(string); !ok {
+		return nil, common.NewCommandErrorMsgWithArgument(
+			common.ErrBadValue,
+			fmt.Sprintf("collection name has invalid type %s", common.AliasFromType(collectionParam)),
+			document.Command(),
+		)
+	}
+
+	// get comment from options.Delete().SetComment() method
+	if sp.Comment, err = common.GetOptionalParam(document, "comment", sp.Comment); err != nil {
+		return nil, err
+	}
+
+	var deleted int32
+	var delErrors common.WriteErrors
+
+	// process every delete filter
+	for i := 0; i < deletes.Len(); i++ {
+		// get document with filter
+		deleteDoc, err := common.AssertType[*types.Document](must.NotFail(deletes.Get(i)))
+		if err != nil {
+			return nil, err
+		}
+
+		filter, limit, err := h.prepareDeleteParams(deleteDoc)
+		if err != nil {
+			return nil, err
+		}
+
+		// get comment from query, e.g. db.collection.DeleteOne({"_id":"string", "$comment: "test"})
+		if sp.Comment, err = common.GetOptionalParam(filter, "$comment", sp.Comment); err != nil {
+			return nil, err
+		}
+
+		sp.Filter = filter
+
+		var limited bool
+		if limit == 1 {
+			limited = true
+		}
+
+		del, err := execDelete(ctx, dbPool, &sp, limited)
+		if err == nil {
+			deleted += del
+			continue
+		}
+
+		delErrors.Append(err, int32(i))
+
+		if ordered {
+			break
+		}
+	}
+
+	replyDoc := must.NotFail(types.NewDocument(
+		"ok", float64(1),
+	))
+
+	if delErrors.Len() > 0 {
+		replyDoc = delErrors.Document()
+	}
+
+	replyDoc.Set("n", deleted)
+
+	var reply wire.OpMsg
+	must.NoError(reply.SetSections(wire.OpMsgSection{
+		Documents: []*types.Document{replyDoc},
+	}))
+
+	return &reply, nil
+}
+
+// prepareDeleteParams extracts query filter and limit from delete document.
+func (h *Handler) prepareDeleteParams(deleteDoc *types.Document) (*types.Document, int64, error) {
+	var err error
+
+	if err = common.Unimplemented(deleteDoc, "collation", "hint"); err != nil {
+		return nil, 0, err
+	}
+
+	// get filter from document
+	var filter *types.Document
+	if filter, err = common.GetOptionalParam(deleteDoc, "q", filter); err != nil {
+		return nil, 0, err
+	}
+
+	l, err := deleteDoc.Get("limit")
+	if err != nil {
+		return nil, 0, common.NewCommandErrorMsgWithArgument(
+			common.ErrMissingField,
+			"BSON field 'delete.deletes.limit' is missing but a required field",
+			"limit",
+		)
+	}
+
+	var limit int64
+	if limit, err = common.GetWholeNumberParam(l); err != nil || limit < 0 || limit > 1 {
+		return nil, 0, common.NewCommandErrorMsgWithArgument(
+			common.ErrFailedToParse,
+			fmt.Sprintf("The limit field in delete objects must be 0 or 1. Got %v", l),
+			"limit",
+		)
+	}
+
+	return filter, limit, nil
+}
+
+// execDelete fetches documents, filters them out, limits them (if needed) and deletes them.
+// If limit is true, only the first matched document is chosen for deletion, otherwise all matched documents are chosen.
+// It returns the number of deleted documents or an error.
+func execDelete(ctx context.Context, dbPool *hanadb.Pool, sp *hanadb.SQLParam, limit bool) (int32, error) {
+	var deleted int32
+
+	docs, err := dbPool.GetDocuments(ctx, sp)
+	if err != nil {
+		return 0, err
+	}
+
+	resDocs := make([]*types.Document, 0, 16)
+
+	for _, doc := range docs {
+		var matches bool
+		if matches, err = common.FilterDocument(doc, sp.Filter); err != nil {
+			return 0, err
+		}
+
+		if !matches {
+			continue
+		}
+
+		resDocs = append(resDocs, doc)
+
+		// if limit is set, no need to fetch all the documents
+		if limit {
+			break
+		}
+	}
+
+	// if no documents matched, there is nothing to delete
+	if len(resDocs) == 0 {
+		return 0, nil
+	}
+
+	rowsDeleted, err := deleteDocuments(ctx, dbPool, sp, resDocs)
+	if err != nil {
+		return 0, err
+	}
+
+	deleted = int32(rowsDeleted)
+
+	return deleted, nil
+}
+
+// deleteDocuments deletes documents by _id.
+func deleteDocuments(ctx context.Context, dbPool *hanadb.Pool, sp *hanadb.SQLParam, docs []*types.Document) (int64, error) {
+	ids := make([]any, len(docs))
+	for i, doc := range docs {
+		id := must.NotFail(doc.Get("_id"))
+		ids[i] = id
+	}
+
+	rowsDeleted, err := dbPool.DeleteDocumentsByID(ctx, sp, ids)
+
+	if err != nil {
+		// TODO check error code
+		return 0, common.NewCommandError(common.ErrNamespaceNotFound, fmt.Errorf("delete: ns not found: %w", err))
+	}
+
+	return rowsDeleted, nil
 }

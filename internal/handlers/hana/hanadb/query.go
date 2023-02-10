@@ -12,7 +12,7 @@ import (
 type SQLParam struct {
 	DB         string
 	Collection string
-
+	Comment    string
 	// Query filter for possible pushdown; may be ignored in part or entirely.
 	Filter *types.Document
 }
