@@ -232,6 +232,9 @@ func whereDocument(doc types.Document) (string, error) {
 			docSQL += "%s"
 			var bOBJ []byte
 			bOBJ, err = hjson.MarshalSingleValue(value)
+			if err != nil {
+				return "", nil
+			}
 			oid := bytes.Replace(bOBJ, []byte{34}, []byte{39}, -1)
 			oid = bytes.Replace(oid, []byte{39}, []byte{34}, 2)
 			args = append(args, string(oid))
