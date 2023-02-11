@@ -20,6 +20,9 @@ records/
 state.json
 tmp/
 website/build/
+.env
+
 
 # for local Docker Compse changes; see https://docs.docker.com/compose/extends/#multiple-compose-files
 docker-compose.override.yml
+

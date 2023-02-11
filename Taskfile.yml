@@ -131,6 +131,12 @@ tasks:
     cmds:
       - bin/task{{exeExt}} -d integration env-data
 
+  env-data-hana:
+    desc: "Fill `test` database with data for experiments for hana"
+    cmds:
+      - bin/task{{exeExt}} -d integration env-data-hana
+  
+
   gen:
     desc: "Generate (and format) code"
     cmds:
@@ -312,13 +318,14 @@ tasks:
 
   run-hana:
     deps: [build-testcover]
+    dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
     cmds:
       - >
         bin/ferretdb-testcover{{exeExt}} -test.coverprofile=cover.txt --
         --handler=hana
         --listen-addr=:27017
         --mode=diff-normal
-        --hanainstance-url=not-given
+        --hanainstance-url=$hana_url
         --proxy-addr=127.0.0.1:37017
         --test-records-dir=records
 

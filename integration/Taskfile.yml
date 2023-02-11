@@ -39,6 +39,16 @@ tasks:
       #   -records-dir=../records
       #   -target-port=37018
 
+  env-data-hana:
+    dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+    cmds:
+      - >
+        go test -count=1 {{.RACEFLAG}} -run=TestEnvData -v
+        -tags=ferretdb_testenvdata,ferretdb_hana .
+        -compat-port=0
+        -hanainstance-url=$hana_url
+        -records-dir=../records
+
   integration-gen:
     cmds:
       - go generate -x ./...

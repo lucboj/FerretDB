@@ -52,6 +52,8 @@ var (
 
 	postgreSQLURLF = flag.String("postgresql-url", "", "PostgreSQL URL for 'pg' handler.")
 
+	hanaSQLURLF = flag.String("hanainstance-url", "", "HANA instance URL for 'hana' handler.")
+
 	tigrisURLsF = flag.String("tigris-urls", "", "Tigris URLs for 'tigris' handler in comma separated list.")
 
 	// Disable noisy setup logs by default.
@@ -182,7 +184,7 @@ func setupListener(tb testing.TB, ctx context.Context, logger *zap.Logger) (*mon
 	}
 
 	// one of postgresql-url or tigris-urls should be set.
-	if *tigrisURLsF == "" && *postgreSQLURLF == "" {
+	if *tigrisURLsF == "" && *postgreSQLURLF == "" && *hanaSQLURLF == "" {
 		tb.Fatalf("Both postgresql-url and tigris-urls are empty, one should be set.")
 	}
 
@@ -196,7 +198,8 @@ func setupListener(tb testing.TB, ctx context.Context, logger *zap.Logger) (*mon
 		Metrics:       metrics.ConnMetrics,
 		StateProvider: p,
 
-		PostgreSQLURL: *postgreSQLURLF,
+		PostgreSQLURL:   *postgreSQLURLF,
+		HANAInstanceURL: *hanaSQLURLF,
 
 		TigrisURL: nextTigrisUrl(),
 	}
@@ -321,6 +324,10 @@ func getHandler() string {
 
 	if *tigrisURLsF != "" {
 		return "tigris"
+	}
+
+	if *hanaSQLURLF != "" {
+		return "hana"
 	}
 
 	return ""
