@@ -10,7 +10,7 @@ import (
 
 func (hdb *Pool) DeleteDocumentsByID(ctx context.Context, sp *SQLParam, ids []any) (int64, error) {
 
-	sql := fmt.Sprintf("DELETE FROM \"%s\".\"%s\"", sp.DB, sp.Collection)
+	sql := fmt.Sprintf("DELETE FROM \"%s\".\"%s\" ", sp.DB, sp.Collection)
 
 	whereSQL := "WHERE \"_id\" IN ("
 

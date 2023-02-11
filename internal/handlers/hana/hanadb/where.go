@@ -169,8 +169,8 @@ func whereValue(value any) (vSQL string, sign string, err error) {
 		if err != nil {
 			return
 		}
+
 		oid := bytes.Replace(bOBJ, []byte{34}, []byte{39}, -1)
-		oid = bytes.Replace(oid, []byte{39}, []byte{34}, 2)
 		vSQL = "%s"
 		args = append(args, string(oid))
 
