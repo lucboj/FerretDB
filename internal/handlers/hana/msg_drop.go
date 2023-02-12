@@ -17,7 +17,6 @@ package hana
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/FerretDB/FerretDB/internal/handlers/common"
 	"github.com/FerretDB/FerretDB/internal/handlers/hana/hanadb"
@@ -58,11 +57,6 @@ func (h *Handler) MsgDrop(ctx context.Context, msg *wire.OpMsg) (*wire.OpMsg, er
 	// })
 
 	err = dbPool.DropCollection(ctx, db, collection)
-	if err != nil {
-		fmt.Println(err)
-		fmt.Println(err.Error())
-		return nil, err
-	}
 
 	switch {
 	case err == nil:

@@ -19,7 +19,7 @@ func (hdb *Pool) SetDocumentByID(ctx context.Context, sp *SQLParam, id any, doc 
 	if err != nil {
 		return 0, err
 	}
-	fmt.Println(doc)
+
 	err = hdb.InsertDocument(ctx, sp.DB, sp.Collection, doc)
 	if err == nil {
 		return 1, nil

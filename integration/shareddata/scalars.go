@@ -30,9 +30,10 @@ const (
 // Scalars contain scalar values for tests.
 //
 // This shared data set is frozen. If you need more values, add them in the test itself.
+// int32-min is not possible in SAP HANA JSON Document Store
 var Scalars = &Values[string]{
 	name:     "Scalars",
-	handlers: []string{"pg"},
+	handlers: []string{"pg", "hana"},
 	data: map[string]any{
 		"double":                    42.13,
 		"double-whole":              42.0,
@@ -86,10 +87,10 @@ var Scalars = &Values[string]{
 		"int32":      int32(42),
 		"int32-zero": int32(0),
 		"int32-max":  int32(math.MaxInt32),
-		"int32-min":  int32(math.MinInt32),
-		"int32-1":    int32(4080),
-		"int32-2":    int32(1048560),
-		"int32-3":    int32(268435440),
+		//"int32-min":  int32(math.MinInt32),
+		"int32-1": int32(4080),
+		"int32-2": int32(1048560),
+		"int32-3": int32(268435440),
 
 		"timestamp":   primitive.Timestamp{T: 42, I: 13},
 		"timestamp-i": primitive.Timestamp{I: 1},
@@ -115,7 +116,7 @@ var Scalars = &Values[string]{
 // Doubles contains double values for tests.
 var Doubles = &Values[string]{
 	name:     "Doubles",
-	handlers: []string{"pg", "tigris"},
+	handlers: []string{"pg", "tigris", "hana"},
 	validators: map[string]map[string]any{
 		"tigris": {
 			"$tigrisSchemaString": tigrisSchema(`"type": "number"`),
@@ -148,7 +149,7 @@ var Doubles = &Values[string]{
 // in diff tests https://github.com/FerretDB/dance.
 var BigDoubles = &Values[string]{
 	name:     "BigDoubles",
-	handlers: []string{"pg", "tigris"},
+	handlers: []string{"pg", "tigris", "hana"},
 	validators: map[string]map[string]any{
 		"tigris": {
 			"$tigrisSchemaString": tigrisSchema(`"type": "number"`),
@@ -164,7 +165,7 @@ var BigDoubles = &Values[string]{
 // Tigris JSON schema validator contains extra properties to make it suitable for more tests.
 var Strings = &Values[string]{
 	name:     "Strings",
-	handlers: []string{"pg", "tigris"},
+	handlers: []string{"pg", "tigris", "hana"},
 	validators: map[string]map[string]any{
 		"tigris": {
 			"$tigrisSchemaString": `{
@@ -191,7 +192,7 @@ var Strings = &Values[string]{
 // Binaries contains binary values for tests.
 var Binaries = &Values[string]{
 	name:     "Binaries",
-	handlers: []string{"pg", "tigris"},
+	handlers: []string{"pg", "tigris", "hana"},
 	validators: map[string]map[string]any{
 		"tigris": {
 			"$tigrisSchemaString": tigrisSchema(`"type": "object", "properties": {"$b": {"type": "string", "format": "byte"}, "s": {"type": "integer", "format": "int32"}}`),
@@ -207,7 +208,7 @@ var Binaries = &Values[string]{
 // ObjectIDs contains ObjectID values for tests.
 var ObjectIDs = &Values[string]{
 	name:     "ObjectIDs",
-	handlers: []string{"pg", "tigris"},
+	handlers: []string{"pg", "tigris", "hana"},
 	validators: map[string]map[string]any{
 		"tigris": {
 			"$tigrisSchemaString": tigrisSchema(`"type": "string", "format": "byte"`),
@@ -223,7 +224,7 @@ var ObjectIDs = &Values[string]{
 // Bools contains bool values for tests.
 var Bools = &Values[string]{
 	name:     "Bools",
-	handlers: []string{"pg", "tigris"},
+	handlers: []string{"pg", "tigris", "hana"},
 	validators: map[string]map[string]any{
 		"tigris": {
 			"$tigrisSchemaString": `{
@@ -247,7 +248,7 @@ var Bools = &Values[string]{
 // DateTimes contains datetime values for tests.
 var DateTimes = &Values[string]{
 	name:     "DateTimes",
-	handlers: []string{"pg", "tigris"},
+	handlers: []string{"pg", "tigris", "hana"},
 	validators: map[string]map[string]any{
 		"tigris": {
 			"$tigrisSchemaString": tigrisSchema(`"type": "string", "format": "date-time"`),
@@ -265,7 +266,7 @@ var DateTimes = &Values[string]{
 // Nulls contains null value for tests.
 var Nulls = &Values[string]{
 	name:     "Nulls",
-	handlers: []string{"pg"}, // Not compatible with Tigris as it needs a data type to be set.
+	handlers: []string{"pg", "hana"}, // Not compatible with Tigris as it needs a data type to be set.
 	data: map[string]any{
 		"null": nil,
 	},
@@ -274,7 +275,7 @@ var Nulls = &Values[string]{
 // Regexes contains regex values for tests.
 var Regexes = &Values[string]{
 	name:     "Regexes",
-	handlers: []string{"pg", "tigris"},
+	handlers: []string{"pg", "tigris", "hana"},
 	validators: map[string]map[string]any{
 		"tigris": {
 			"$tigrisSchemaString": tigrisSchema(`"type": "object", "properties": {"$r": {"type": "string"}, "o": {"type": "string"}}`),
@@ -288,9 +289,10 @@ var Regexes = &Values[string]{
 }
 
 // Int32s contains int32 values for tests.
+// int32-min is not possible in SAP HANA JSON Document Store
 var Int32s = &Values[string]{
 	name:     "Int32s",
-	handlers: []string{"pg", "tigris"},
+	handlers: []string{"pg", "tigris", "hana"},
 	validators: map[string]map[string]any{
 		"tigris": {
 			"$tigrisSchemaString": tigrisSchema(`"type": "integer", "format": "int32"`),
@@ -300,7 +302,7 @@ var Int32s = &Values[string]{
 		"int32":      int32(42),
 		"int32-zero": int32(0),
 		"int32-max":  int32(math.MaxInt32),
-		"int32-min":  int32(math.MinInt32),
+		//"int32-min":  int32(math.MinInt32),
 		// "int32-null": nil, TODO: https://github.com/FerretDB/FerretDB/issues/1821
 		"int32-1": int32(4080),
 		"int32-2": int32(1048560),
@@ -311,7 +313,7 @@ var Int32s = &Values[string]{
 // Timestamps contains timestamp values for tests.
 var Timestamps = &Values[string]{
 	name:     "Timestamps",
-	handlers: []string{"pg", "tigris"},
+	handlers: []string{"pg", "tigris", "hana"},
 	validators: map[string]map[string]any{
 		"tigris": {
 			"$tigrisSchemaString": tigrisSchema(`"type": "object", "properties": {"$t": {"type": "string"}}`),
@@ -327,7 +329,7 @@ var Timestamps = &Values[string]{
 // Int64s contains int64 values for tests.
 var Int64s = &Values[string]{
 	name:     "Int64s",
-	handlers: []string{"pg", "tigris"},
+	handlers: []string{"pg", "tigris", "hana"},
 	validators: map[string]map[string]any{
 		"tigris": {
 			"$tigrisSchemaString": tigrisSchema(`"type": "integer", "format": "int64"`),
@@ -349,7 +351,7 @@ var Int64s = &Values[string]{
 // Unsets contains unset value for tests.
 var Unsets = &Values[string]{
 	name:     "Unsets",
-	handlers: []string{"pg", "tigris"},
+	handlers: []string{"pg", "tigris", "hana"},
 	data: map[string]any{
 		"unset": unset,
 	},
@@ -358,7 +360,7 @@ var Unsets = &Values[string]{
 // ObjectIDKeys contains documents with ObjectID keys for tests.
 var ObjectIDKeys = &Values[primitive.ObjectID]{
 	name:     "ObjectIDKeys",
-	handlers: []string{"pg", "tigris"},
+	handlers: []string{"pg", "tigris", "hana"},
 	data: map[primitive.ObjectID]any{
 		{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11}: "objectid",
 		primitive.NilObjectID: "objectid-empty",

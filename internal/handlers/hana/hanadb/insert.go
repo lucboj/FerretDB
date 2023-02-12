@@ -25,8 +25,6 @@ func (hdb *Pool) InsertDocument(ctx context.Context, db, collection string, doc 
 	if err != nil {
 		return lazyerrors.Error(err)
 	}
-	fmt.Println(b)
-	fmt.Printf("%s\n", b)
 
 	sql := fmt.Sprintf("INSERT INTO \"%s\".\"%s\" VALUES ($1)", db, collection)
 
