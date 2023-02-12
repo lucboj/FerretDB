@@ -12,34 +12,30 @@ import (
 // validateDatabaseNameRe validates FerretDB database / PostgreSQL schema names.
 var validateDatabaseNameRe = regexp.MustCompile("^[-_a-z][-_a-z0-9]{0,62}$")
 
-// // Databases returns a sorted list of FerretDB databases / PostgreSQL schemas.
-// func Databases(ctx context.Context, tx pgx.Tx) ([]string, error) {
-// 	sql := "SELECT schema_name FROM information_schema.schemata ORDER BY schema_name"
-// 	rows, err := tx.Query(ctx, sql)
-// 	if err != nil {
-// 		return nil, lazyerrors.Error(err)
-// 	}
-// 	defer rows.Close()
+// Databases returns a sorted list of FerretDB databases / PostgreSQL schemas.
+func (hdb *Pool) Databases(ctx context.Context) ([]string, error) {
+	sql := "SELECT SCHEMA_NAME FROM \"PUBLIC\".\"SCHEMAS\" WHERE SCHEMA_OWNER NOT LIKE '%_SYS_%' AND NOT SCHEMA_OWNER = 'SYS';"
+	rows, err := hdb.QueryContext(ctx, sql)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+	defer rows.Close()
 
-// 	res := make([]string, 0, 2)
-// 	for rows.Next() {
-// 		var name string
-// 		if err = rows.Scan(&name); err != nil {
-// 			return nil, lazyerrors.Error(err)
-// 		}
+	res := make([]string, 0, 2)
+	for rows.Next() {
+		var name string
+		if err = rows.Scan(&name); err != nil {
+			return nil, lazyerrors.Error(err)
+		}
 
-// 		if strings.HasPrefix(name, "pg_") || name == "information_schema" {
-// 			continue
-// 		}
+		res = append(res, name)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, lazyerrors.Error(err)
+	}
 
-// 		res = append(res, name)
-// 	}
-// 	if err = rows.Err(); err != nil {
-// 		return nil, lazyerrors.Error(err)
-// 	}
-
-// 	return res, nil
-// }
+	return res, nil
+}
 
 // createDatabaseIfNotExists ensures that given database exists.
 // If the database doesn't exist, it creates it.
@@ -117,45 +113,30 @@ func (hdb *Pool) DropDatabase(ctx context.Context, db string) error {
 // 	return size, nil
 // }
 
-// // TablesSize returns the sum of sizes of all tables in the given database in bytes.
-// func (pgPool *Pool) TablesSize(ctx context.Context, tx pgx.Tx, db string) (int64, error) {
-// 	tables, err := tablesFiltered(ctx, tx, db)
-// 	if err != nil {
-// 		return 0, err
-// 	}
+// TablesSize returns the sum of sizes of all tables in the given database in bytes.
+func (hdb *Pool) TablesSize(ctx context.Context, db string) (int64, error) {
+	var sizeOnDisk int64
 
-// 	// iterate over result to collect sizes
-// 	var sizeOnDisk int64
+	collections, err := hdb.Collections(ctx, db)
+	if err != nil {
+		return 0, err
+	}
 
-// 	for _, name := range tables {
-// 		var tableSize int64
-// 		fullName := pgx.Identifier{db, name}.Sanitize()
-// 		// If the table was deleted after we got the list of tables, pg_total_relation_size will return null.
-// 		// We use COALESCE to scan this null value as 0 in this case.
-// 		// Even though we run the query in a transaction, the current isolation level doesn't guarantee
-// 		// that the table is not deleted (see https://www.postgresql.org/docs/14/transaction-iso.html).
-// 		// PgPool (not a transaction) is used on purpose here. In this case, transaction doesn't lock
-// 		// relations, and it's possible that the table/schema is deleted between the moment we get the list of tables
-// 		// and the moment we get the size of the table. In this case, we might receive an error from the database,
-// 		// and transaction will be interrupted. Such errors are not critical, we can just ignore them, and
-// 		// we don't need to interrupt the whole transaction.
-// 		err = pgPool.QueryRow(ctx, "SELECT COALESCE(pg_total_relation_size($1), 0)", fullName).Scan(&tableSize)
-// 		if err == nil {
-// 			sizeOnDisk += tableSize
-// 			continue
-// 		}
+	for _, name := range collections {
+		var tableSize any
+		err = hdb.QueryRowContext(ctx, "SELECT TABLE_SIZE FROM \"PUBLIC\".\"M_TABLES\" WHERE SCHEMA_NAME = $1 AND TABLE_NAME = $2 AND TABLE_TYPE = 'COLLECTION';", db, name).Scan(&tableSize)
+		if err != nil {
+			return 0, err
+		}
+		switch tableSize := tableSize.(type) {
+		case int64: // collection is in memory and a size can be calculated
+			sizeOnDisk += tableSize
+		case nil: // collection is not in memory and no size can be calculated
+			continue
+		default:
+			return 0, lazyerrors.Errorf("Got wrong type for tableSize. Got: %T", tableSize)
+		}
+	}
 
-// 		var pgErr *pgconn.PgError
-// 		if errors.As(err, &pgErr) {
-// 			switch pgErr.Code {
-// 			case pgerrcode.UndefinedTable, pgerrcode.InvalidSchemaName:
-// 				// Table or schema was deleted after we got the list of tables, just ignore it
-// 				continue
-// 			}
-// 		}
-
-// 		return 0, err
-// 	}
-
-// 	return sizeOnDisk, nil
-// }
+	return sizeOnDisk, nil
+}
