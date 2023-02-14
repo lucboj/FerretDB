@@ -72,6 +72,6 @@ func TestDeps(t *testing.T) {
 		t.Parallel()
 
 		diff := tagPackages(t, "ferretdb_hana")
-		assert.Contains(t, diff, "github.com/SAP/go-hdb/driver")
+		assert.Contains(t, diff, "SAP/go-hdb/driver")
 	})
 }

@@ -52,7 +52,7 @@ var (
 
 	postgreSQLURLF = flag.String("postgresql-url", "", "PostgreSQL URL for 'pg' handler.")
 
-	hanaSQLURLF = flag.String("hanainstance-url", "", "HANA instance URL for 'hana' handler.")
+	hanaURLF = flag.String("hanainstance-url", "", "HANA instance URL for 'hana' handler.")
 
 	tigrisURLsF = flag.String("tigris-urls", "", "Tigris URLs for 'tigris' handler in comma separated list.")
 
@@ -178,14 +178,8 @@ func setupListener(tb testing.TB, ctx context.Context, logger *zap.Logger) (*mon
 
 	require.Zero(tb, *targetPortF, "-target-port must be 0 for in-process FerretDB")
 
-	// only one of postgresql-url and tigris-urls should be set.
-	if *tigrisURLsF != "" && *postgreSQLURLF != "" {
-		tb.Fatalf("Both postgresql-url and tigris-urls are set, only one should be set.")
-	}
-
-	// one of postgresql-url or tigris-urls should be set.
-	if *tigrisURLsF == "" && *postgreSQLURLF == "" && *hanaSQLURLF == "" {
-		tb.Fatalf("Both postgresql-url and tigris-urls are empty, one should be set.")
+	if errMsg, oneSet := oneURLSet(); !oneSet {
+		tb.Fatalf(errMsg)
 	}
 
 	p, err := state.NewProvider("")
@@ -198,8 +192,9 @@ func setupListener(tb testing.TB, ctx context.Context, logger *zap.Logger) (*mon
 		Metrics:       metrics.ConnMetrics,
 		StateProvider: p,
 
-		PostgreSQLURL:   *postgreSQLURLF,
-		HANAInstanceURL: *hanaSQLURLF,
+		PostgreSQLURL: *postgreSQLURLF,
+
+		HANAInstanceURL: *hanaURLF,
 
 		TigrisURL: nextTigrisUrl(),
 	}
@@ -316,6 +311,7 @@ func setupClient(tb testing.TB, ctx context.Context, uri string, isTLS bool) *mo
 //
 //   - when `-postgresql-url` flag is set, it is `pg` handler;
 //   - when `tigris-urls` flag is set, it is `tigris` handler;
+//   - when `hana-url` flag is set, it is `hana` handler;
 //   - and the handler is empty for MongoDB.
 func getHandler() string {
 	if *postgreSQLURLF != "" {
@@ -326,7 +322,7 @@ func getHandler() string {
 		return "tigris"
 	}
 
-	if *hanaSQLURLF != "" {
+	if *hanaURLF != "" {
 		return "hana"
 	}
 
@@ -340,4 +336,41 @@ func getUser(isTLS bool) *url.Userinfo {
 	}
 
 	return nil
+}
+
+// oneURLSet looks if only one URL is set
+// If only one is set an empty string and true is returned
+// Else an error message describing the problem and false is returned
+func oneURLSet() (string, bool) {
+	var urlsSet int
+	setURLs := make([]string, 0, 3)
+
+	if *postgreSQLURLF != "" {
+		urlsSet++
+		setURLs = append(setURLs, "postgresql-url")
+	}
+
+	if *hanaURLF != "" {
+		urlsSet++
+		setURLs = append(setURLs, "hana-url")
+	}
+
+	if *tigrisURLsF != "" {
+		urlsSet++
+		setURLs = append(setURLs, "tigris-urls")
+	}
+
+	if urlsSet == 1 {
+		return "", true
+	}
+
+	if urlsSet == 0 {
+		return "postgresql-url, hana-url and tigris-urls are empty, one should be set.", false
+	}
+
+	if urlsSet == 3 {
+		return "postgresql-url, hana-url and tigris-urls are all set, only one should be set.", false
+	}
+
+	return "Both " + strings.Join(setURLs, " and ") + " are set, only one should be set.", false
 }

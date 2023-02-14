@@ -95,7 +95,7 @@ func TestSchemaMarshalUnmarshal(t *testing.T) {
 						{"t": "bool"},
 						{"t": "date"},
 						{"t": "regex", "o": "i"},
-						{"t": "object", "$s": {
+						{"t": "object", "&s": {
 							"p": {
 								"arr": {"t": "array", "i": [
 									{"t": "int"}, 
@@ -104,14 +104,14 @@ func TestSchemaMarshalUnmarshal(t *testing.T) {
 								"bar": {"t": "null"},
 								"baz": {"t": "long"}
 							},
-							"$k": ["arr", "bar", "baz"]
+							"&k": ["arr", "bar", "baz"]
 						}}
 					]},
 					"data": {"t": "binData", "s": 0},
 					"distance": {"t": "double"},
 					"name": {"t": "string"}
 				},
-				"$k": ["_id", "arr", "data", "distance", "name"]
+				"&k": ["_id", "arr", "data", "distance", "name"]
 			}`,
 		},
 		"Embedded": {
@@ -163,19 +163,19 @@ func TestSchemaMarshalUnmarshal(t *testing.T) {
 			},
 			json: `{
 				"p": {
-					"obj": {"t": "object", "$s": {
+					"obj": {"t": "object", "&s": {
 						"p": {	
 							"arr": {"t": "array", "i": [
-								{"t": "object", "$s": {}}, {"t": "object", "$s": {
-									"p": {"foo": {"t": "array", "i":[]}}, "$k": ["foo"]
+								{"t": "object", "&s": {}}, {"t": "object", "&s": {
+									"p": {"foo": {"t": "array", "i":[]}}, "&k": ["foo"]
 								}}
 							]},
 							"empty-arr": {"t": "array", "i":[]}				
 						},
-						"$k": ["arr", "empty-arr"]
+						"&k": ["arr", "empty-arr"]
 					}}
 				},
-				"$k": ["obj"]
+				"&k": ["obj"]
 			}`,
 		},
 	} {

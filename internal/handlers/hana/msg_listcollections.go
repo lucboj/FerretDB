@@ -58,20 +58,6 @@ func (h *Handler) MsgListCollections(ctx context.Context, msg *wire.OpMsg) (*wir
 
 	var names []string
 
-	// err = dbPool.InTransaction(ctx, func(tx pgx.Tx) error {
-	// 	var err error
-
-	// 	names, err = pgdb.Collections(ctx, tx, db)
-	// 	if err != nil && !errors.Is(err, pgdb.ErrSchemaNotExist) {
-	// 		return lazyerrors.Error(err)
-	// 	}
-
-	// 	return nil
-	// })
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	names, err = dbPool.Collections(ctx, db)
 	if err != nil {
 		return nil, err

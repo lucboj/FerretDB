@@ -52,10 +52,6 @@ func (h *Handler) MsgDrop(ctx context.Context, msg *wire.OpMsg) (*wire.OpMsg, er
 		return nil, err
 	}
 
-	// err = dbPool.InTransaction(ctx, func(tx pgx.Tx) error {
-	// 	return pgdb.DropCollection(ctx, tx, db, collection)
-	// })
-
 	err = dbPool.DropCollection(ctx, db, collection)
 
 	switch {

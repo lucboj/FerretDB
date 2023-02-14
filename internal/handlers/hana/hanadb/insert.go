@@ -32,7 +32,5 @@ func (hdb *Pool) InsertDocument(ctx context.Context, db, collection string, doc 
 		return err
 	}
 
-	// _, err = hdb.Driver.UseDatabase(db).Insert(ctx, collection, []driver.Document{b})
-
-	return err
+	return nil
 }

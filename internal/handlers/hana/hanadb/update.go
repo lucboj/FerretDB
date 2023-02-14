@@ -13,6 +13,7 @@ import (
 // TODO: When JSON Documentstore supports replacing document with JSON string using PARSE_JSON change function to use UPDATE statement
 func (hdb *Pool) SetDocumentByID(ctx context.Context, sp *SQLParam, id any, doc *types.Document) (int64, error) {
 
+	// For when SAP HANA JSON Document Store supports PARSE_JSON for replace
 	//sql := fmt.Sprintf("UPDATE \"%s\".\"%s\" SET \"%s\"=$1 WHERE \"_id\" = '63e4e43a35baf79b46f2a300'", sp.DB, sp.Collection, sp.Collection)
 
 	err := hdb.DeleteOneDocumentByID(ctx, sp, id)

@@ -21,7 +21,6 @@ var reservedPrefix = "_ferretdb_"
 // It returns possibly wrapped error:
 //   - ErrInvalidDatabaseName - if the given database name doesn't conform to restrictions.
 //   - ErrInvalidCollectionName - if the given collection name doesn't conform to restrictions.
-//   - *transactionConflictError - if a PostgreSQL conflict occurs (the caller could retry the transaction).
 func (hdb *Pool) CreateCollectionIfNotExists(ctx context.Context, db, collection string) error {
 	if !validateCollectionNameRe.MatchString(collection) ||
 		strings.HasPrefix(collection, reservedPrefix) {

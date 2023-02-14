@@ -101,18 +101,6 @@ func (hdb *Pool) DropDatabase(ctx context.Context, db string) error {
 	return err
 }
 
-// // DatabaseSize returns the size of the current database in bytes.
-// func DatabaseSize(ctx context.Context, tx pgx.Tx) (int64, error) {
-// 	var size int64
-
-// 	err := tx.QueryRow(ctx, "SELECT pg_database_size(current_database())").Scan(&size)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-
-// 	return size, nil
-// }
-
 // TablesSize returns the sum of sizes of all tables in the given database in bytes.
 func (hdb *Pool) TablesSize(ctx context.Context, db string) (int64, error) {
 	var sizeOnDisk int64

@@ -17,7 +17,6 @@ package hana
 
 import (
 	"context"
-	"net/url"
 	"sync"
 
 	"go.uber.org/zap"
@@ -32,7 +31,6 @@ import (
 // / Handler implements handlers.Interface on top of PostgreSQL.
 type Handler struct {
 	*NewOpts
-	url url.URL
 
 	// accessed by DBPool(ctx)
 	rw   sync.RWMutex
@@ -53,14 +51,8 @@ func New(opts *NewOpts) (handlers.Interface, error) {
 		return nil, lazyerrors.New("HANA instance URL is not provided")
 	}
 
-	//u, err := url.Parse(opts.HANAInstanceURL)
-	// if err != nil {
-	// 	return nil, lazyerrors.Error(err)
-	// }
-
 	h := &Handler{
 		NewOpts: opts,
-		//	url:     *u,
 	}
 
 	return h, nil
@@ -75,19 +67,6 @@ func (h *Handler) Close() {
 //
 // Pool is not closed when ctx is canceled.
 func (h *Handler) DBPool(ctx context.Context) (*hanadb.Pool, error) {
-	// connInfo := conninfo.Get(ctx)
-	// username, password := connInfo.Auth()
-
-	// // do not log password or full URL
-
-	// // replace authentication info only if it is present in the connection
-	//u := h.url
-	// if username != "" && password != "" {
-	// 	u.User = url.UserPassword(username, password)
-	// }
-
-	//url := u.String()
-
 	url := h.HANAInstanceURL
 
 	h.rw.RLock()
@@ -97,10 +76,6 @@ func (h *Handler) DBPool(ctx context.Context) (*hanadb.Pool, error) {
 	if pool != nil {
 		return pool, nil
 	}
-	// if ok {
-	// 	h.L.Debug("DBPool: found existing pool", zap.String("username", username))
-	// 	return p, nil
-	// }
 
 	h.rw.Lock()
 	defer h.rw.Unlock()
@@ -109,13 +84,6 @@ func (h *Handler) DBPool(ctx context.Context) (*hanadb.Pool, error) {
 	if err != nil {
 		return nil, lazyerrors.Error(err)
 	}
-	// if err != nil {
-	// 	h.L.Warn("DBPool: authentication failed", zap.String("username", username), zap.Error(err))
-	// 	return nil, lazyerrors.Error(err)
-	// }
-
-	// h.L.Info("DBPool: authentication succeed", zap.String("username", username))
-	// h.pools[url] = p
 
 	h.pool = pool
 

@@ -33,14 +33,14 @@ func TestMarshalUnmarshal(t *testing.T) {
 		json string
 	}{
 		"Empty": {
-			json: `{"$s":{}}`,
+			json: `{"&s":{}}`,
 			doc:  must.NotFail(types.NewDocument()),
 		},
 		"Filled": {
 			json: `{
-			"$s": {
+			"&s": {
 				"p": {"foo": {"t": "string"}},
-				"$k": ["foo"]
+				"&k": ["foo"]
 			}, 
 			"foo": "bar"
 		}`,
@@ -75,7 +75,7 @@ func TestUnmarshalInvalid(t *testing.T) {
 		expected string
 	}{
 		"NoData": {
-			json:     `{"$s":{"p": {"foo": {"t": "string"}},"$k": ["foo"]}}`,
+			json:     `{"&s":{"p": {"foo": {"t": "string"}},"&k": ["foo"]}}`,
 			expected: `the data must have the same number of schema keys and document fields`,
 		},
 		"InvalidData": {
@@ -83,7 +83,7 @@ func TestUnmarshalInvalid(t *testing.T) {
 			expected: `json: cannot unmarshal string into Go value of type map`,
 		},
 		"ExtraData": {
-			json:     `{"$s":{"p": {"foo": {"t": "string"}},"$k": ["foo"]}, "foo": "bar"}foo`,
+			json:     `{"&s":{"p": {"foo": {"t": "string"}},"&k": ["foo"]}, "foo": "bar"}foo`,
 			expected: `3 bytes remains in the decoder: foo`,
 		},
 		"NoSchema": {
@@ -95,14 +95,14 @@ func TestUnmarshalInvalid(t *testing.T) {
 			expected: `schema is not set`,
 		},
 		"EmptySchema": {
-			json:     `{"$s":{"p":{}, "$k": []}, "foo": "bar"}`,
+			json:     `{"&s":{"p":{}, "&k": []}, "foo": "bar"}`,
 			expected: `the data must have the same number of schema keys and document fields`,
 		},
 		"ExtraFieldInSchema": {
 			json: `{
-				"$s": {
+				"&s": {
 					"p": {"foo": {"t": "string"}},
-					"$k": ["foo"],
+					"&k": ["foo"],
 					"unknown": "field"
 				}, 
 				"foo": "bar"
@@ -111,9 +111,9 @@ func TestUnmarshalInvalid(t *testing.T) {
 		},
 		"ExtraFieldInDoc": {
 			json: `{
-				"$s": {
+				"&s": {
 					"p": {"foo": {"t": "string"}},
-					"$k": ["foo"]
+					"&k": ["foo"]
 				}, 
 				"foo": "bar",
 				"fizz": "buzz"
@@ -122,9 +122,9 @@ func TestUnmarshalInvalid(t *testing.T) {
 		},
 		"MixedUpKeys": {
 			json: `{
-				"$s": {
+				"&s": {
 					"p": {"foo": {"t": "string"}},
-					"$k": ["foo"]
+					"&k": ["foo"]
 				}, 
 				"fizz": "buzz"
 			}`,

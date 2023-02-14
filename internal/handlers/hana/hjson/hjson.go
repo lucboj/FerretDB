@@ -24,7 +24,7 @@
 //
 //	{
 //	   "&s": {
-//	     "$k": ["field1", "field2", ...],
+//	     "&k": ["field1", "field2", ...],
 //	     "p": {
 //	       "field1": {<schema>},
 //	       "field2": {<schema>},
@@ -39,7 +39,7 @@
 //
 //	Alias      types package    hjson package        hjson schema                                            JSON representation
 //
-//	object     *types.Document  *hjson.documentType  {"t":"object", "&s": {"$k":[<keys>], "p":{<properties>}} JSON object
+//	object     *types.Document  *hjson.documentType  {"t":"object", "&s": {"&k":[<keys>], "p":{<properties>}} JSON object
 //	array      *types.Array     *hjson.arrayType     {"t":"array", "i": [<item 1>, <item 2>]}                JSON array
 //
 // Scalar types

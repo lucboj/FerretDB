@@ -90,11 +90,6 @@ func (h *Handler) MsgListDatabases(ctx context.Context, msg *wire.OpMsg) (*wire.
 		databases.Append(d)
 	}
 
-	// if !nameOnly {
-	// 	//totalSize, err = pgdb.DatabaseSize(ctx, tx)
-	// 	totalSize = 12
-	// }
-
 	if err != nil {
 		return nil, err
 	}
