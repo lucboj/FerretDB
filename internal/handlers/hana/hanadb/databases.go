@@ -128,3 +128,23 @@ func (hdb *Pool) TablesSize(ctx context.Context, db string) (int64, error) {
 
 	return sizeOnDisk, nil
 }
+
+func (hdb *Pool) NamespaceExists(ctx context.Context, db, collection string) (bool, error) {
+	if dbExists, err := hdb.databaseExists(ctx, db); err == nil {
+		if !dbExists {
+			return false, nil
+		}
+	} else {
+		return false, err
+	}
+
+	if collectionExists, err := hdb.collectionExists(ctx, db, collection); err == nil {
+		if !collectionExists {
+			return false, nil
+		}
+	} else {
+		return false, err
+	}
+
+	return true, nil
+}

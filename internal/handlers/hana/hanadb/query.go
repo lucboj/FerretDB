@@ -18,7 +18,14 @@ type SQLParam struct {
 }
 
 func (hdb *Pool) GetDocuments(ctx context.Context, SQLParam *SQLParam) ([]*types.Document, error) {
-
+	if nsExists, err := hdb.NamespaceExists(ctx, SQLParam.DB, SQLParam.Collection); err == nil {
+		if !nsExists {
+			var res []*types.Document
+			return res, nil
+		}
+	} else {
+		return nil, err
+	}
 	query := fmt.Sprintf("SELECT * FROM \"%s\".\"%s\"", SQLParam.DB, SQLParam.Collection)
 
 	rows, err := hdb.QueryContext(ctx, query)
