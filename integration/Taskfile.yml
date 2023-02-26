@@ -46,7 +46,7 @@ tasks:
       - >
         go test -count=1 {{.RACEFLAG}} -run=TestEnvData -v
         -tags=ferretdb_testenvdata,ferretdb_hana .
-        -compat-port=0
+        -target-backend=ferretdb-hana
         -hanainstance-url=$hana_url
         -records-dir=../records
 
