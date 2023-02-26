@@ -172,7 +172,7 @@ var Strings = &Values[string]{
 				"title": "%%collection%%",
 				"primary_key": ["_id"],
 				"properties": {
-					"foo": {"type": "integer", "format": "int32"}, 
+					"foo": {"type": "integer", "format": "int32"},
 					"bar": {"type": "array", "items": {"type": "string"}},
 					"v": {"type": "string"},
 					"_id": {"type": "string"}
@@ -231,7 +231,7 @@ var Bools = &Values[string]{
 				"title": "%%collection%%",
 				"primary_key": ["_id"],
 				"properties": {
-					"foo": {"type": "integer", "format": "int32"}, 
+					"foo": {"type": "integer", "format": "int32"},
 					"v": {"type": "boolean"},
 					"_id": {"type": "string"}
 				}
@@ -377,6 +377,9 @@ func tigrisSchema(typeString string) string {
 				"properties": {
 					"v": {%%type%%},
 					"foo": {%%type%%},
+					"a": {%%type%%},
+					"b": {%%type%%},
+					"c": {%%type%%},
 					"_id": {"type": "string"}
 				}
 			}`
