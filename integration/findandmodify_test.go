@@ -27,6 +27,7 @@ import (
 )
 
 func TestFindAndModifyEmptyCollectionName(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 
 	for name, tc := range map[string]struct {
@@ -55,6 +56,7 @@ func TestFindAndModifyEmptyCollectionName(t *testing.T) {
 }
 
 func TestFindAndModifyErrors(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 
 	for name, tc := range map[string]struct {
@@ -143,6 +145,7 @@ func TestFindAndModifyErrors(t *testing.T) {
 }
 
 func TestFindAndModifyUpsertComplex(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 
 	for name, tc := range map[string]struct {
@@ -198,6 +201,7 @@ func TestFindAndModifyUpsertComplex(t *testing.T) {
 }
 
 func TestFindAndModifyNonExistingCollection(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	ctx, collection := setup.Setup(t)
 

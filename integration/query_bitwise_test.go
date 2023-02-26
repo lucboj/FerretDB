@@ -36,6 +36,7 @@ func TestQueryBitwiseAllClear(t *testing.T) {
 	}
 
 	setup.SkipForTigris(t)
+	setup.SkipForHANAWithReason(t, "problems with some values")
 
 	t.Parallel()
 	ctx, collection := setup.Setup(t, shareddata.Scalars)
@@ -339,6 +340,7 @@ func TestQueryBitwiseAnyClear(t *testing.T) {
 	}
 
 	setup.SkipForTigris(t)
+	setup.SkipForHANAWithReason(t, "problems with some values")
 
 	t.Parallel()
 	ctx, collection := setup.Setup(t, shareddata.Scalars)
@@ -505,7 +507,7 @@ func TestQueryBitwiseAnySet(t *testing.T) {
 	if runtime.GOARCH == "arm64" {
 		t.Skip("TODO https://github.com/FerretDB/FerretDB/issues/491")
 	}
-
+	setup.SkipForHANAWithReason(t, "problems with some values")
 	setup.SkipForTigris(t)
 
 	t.Parallel()

@@ -41,18 +41,18 @@ func (hdb *Pool) Databases(ctx context.Context) ([]string, error) {
 // If the database doesn't exist, it creates it.
 // It returns true if the database was created.
 func (hdb *Pool) CreateDatabaseIfNotExists(ctx context.Context, db string) (bool, error) {
-	dbExists, err := hdb.databaseExists(ctx, db)
+	if !validateDatabaseNameRe.MatchString(db) ||
+		strings.HasPrefix(db, reservedPrefix) {
+		return false, ErrInvalidDatabaseName
+	}
+
+	dbExists, err := hdb.DatabaseExists(ctx, db)
 	if err != nil {
 		return false, lazyerrors.Error(err)
 	}
 
 	if dbExists {
 		return true, nil
-	}
-
-	if !validateDatabaseNameRe.MatchString(db) ||
-		strings.HasPrefix(db, reservedPrefix) {
-		return false, ErrInvalidDatabaseName
 	}
 
 	sql := fmt.Sprintf("CREATE SCHEMA \"%s\"", db)
@@ -64,7 +64,7 @@ func (hdb *Pool) CreateDatabaseIfNotExists(ctx context.Context, db string) (bool
 	return false, nil
 }
 
-func (hdb *Pool) databaseExists(ctx context.Context, db string) (bool, error) {
+func (hdb *Pool) DatabaseExists(ctx context.Context, db string) (bool, error) {
 	sql := fmt.Sprintf("SELECT COUNT(*) FROM \"PUBLIC\".\"SCHEMAS\" WHERE SCHEMA_NAME = '%s'", db)
 
 	var count int
@@ -85,7 +85,7 @@ func (hdb *Pool) databaseExists(ctx context.Context, db string) (bool, error) {
 // It returns ErrSchemaNotExist if schema does not exist.
 func (hdb *Pool) DropDatabase(ctx context.Context, db string) error {
 
-	dbExists, err := hdb.databaseExists(ctx, db)
+	dbExists, err := hdb.DatabaseExists(ctx, db)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func (hdb *Pool) TablesSize(ctx context.Context, db string) (int64, error) {
 }
 
 func (hdb *Pool) NamespaceExists(ctx context.Context, db, collection string) (bool, error) {
-	if dbExists, err := hdb.databaseExists(ctx, db); err == nil {
+	if dbExists, err := hdb.DatabaseExists(ctx, db); err == nil {
 		if !dbExists {
 			return false, nil
 		}

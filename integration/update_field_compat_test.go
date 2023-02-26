@@ -29,6 +29,7 @@ import (
 )
 
 func TestUpdateFieldCompatCurrentDate(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
 	setup.SkipForTigrisWithReason(t, "https://github.com/FerretDB/FerretDB/issues/1669")
 
 	t.Parallel()
@@ -111,6 +112,8 @@ func TestUpdateFieldCompatCurrentDate(t *testing.T) {
 }
 
 func TestUpdateFieldCompatInc(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
+
 	t.Parallel()
 
 	testCases := map[string]updateCompatTestCase{
@@ -149,6 +152,8 @@ func TestUpdateFieldCompatInc(t *testing.T) {
 
 // TestUpdateFieldCompatIncComplex are test that do not work on tigris.
 func TestUpdateFieldCompatIncComplex(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
+
 	setup.SkipForTigrisWithReason(t, "https://github.com/FerretDB/FerretDB/issues/1668")
 
 	t.Parallel()
@@ -230,6 +235,8 @@ func TestUpdateFieldCompatIncComplex(t *testing.T) {
 }
 
 func TestUpdateFieldCompatMax(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
+
 	t.Parallel()
 
 	testCases := map[string]updateCompatTestCase{
@@ -359,6 +366,8 @@ func TestUpdateFieldCompatMax(t *testing.T) {
 }
 
 func TestUpdateFieldCompatMin(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
+
 	t.Parallel()
 
 	testCases := map[string]updateCompatTestCase{
@@ -486,6 +495,8 @@ func TestUpdateFieldCompatMin(t *testing.T) {
 }
 
 func TestUpdateFieldCompatRename(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
+
 	testCases := map[string]updateCompatTestCase{
 		"Simple": {
 			update: bson.D{{"$rename", bson.D{{"v", "foo"}}}},
@@ -564,6 +575,8 @@ func TestUpdateFieldCompatRename(t *testing.T) {
 }
 
 func TestUpdateFieldCompatUnset(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
+
 	t.Parallel()
 
 	testCases := map[string]updateCompatTestCase{
@@ -610,6 +623,8 @@ func TestUpdateFieldCompatUnset(t *testing.T) {
 }
 
 func TestUpdateFieldCompatUnsetArray(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
+
 	t.Parallel()
 
 	testCases := map[string]updateCompatTestCase{
@@ -623,6 +638,8 @@ func TestUpdateFieldCompatUnsetArray(t *testing.T) {
 }
 
 func TestUpdateFieldCompatSet(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
+
 	t.Parallel()
 
 	// Tigris does not update number type upon set due to schema.
@@ -792,6 +809,8 @@ func TestUpdateFieldCompatSet(t *testing.T) {
 }
 
 func TestUpdateFieldCompatSetArray(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
+
 	t.Parallel()
 
 	testCases := map[string]updateCompatTestCase{
@@ -834,6 +853,8 @@ func TestUpdateFieldCompatSetArray(t *testing.T) {
 }
 
 func TestUpdateFieldCompatSetOnInsert(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
+
 	t.Parallel()
 
 	testCases := map[string]updateCompatTestCase{
@@ -887,6 +908,8 @@ func TestUpdateFieldCompatSetOnInsert(t *testing.T) {
 }
 
 func TestUpdateFieldCompatSetOnInsertArray(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
+
 	t.Parallel()
 
 	testCases := map[string]updateCompatTestCase{
@@ -904,6 +927,8 @@ func TestUpdateFieldCompatSetOnInsertArray(t *testing.T) {
 }
 
 func TestUpdateFieldCompatMixed(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
+
 	t.Parallel()
 
 	testCases := map[string]updateCompatTestCase{
@@ -935,6 +960,8 @@ func TestUpdateFieldCompatMixed(t *testing.T) {
 }
 
 func TestUpdateFieldCompatMul(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
+
 	setup.SkipForTigrisWithReason(t, "https://github.com/FerretDB/FerretDB/issues/1668")
 
 	t.Parallel()

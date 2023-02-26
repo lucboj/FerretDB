@@ -114,6 +114,21 @@ func TigrisOnlyWithReason(tb testing.TB, reason string) {
 	}
 }
 
+// SkipForHANAWithReason skips the current test for `hana` handler.
+//
+// This function should not be used lightly.
+func SkipForHANAWithReason(tb testing.TB, reason string) {
+	tb.Helper()
+
+	if getHandler() == "hana" {
+		if reason == "" {
+			tb.Skipf("Skipping for HANA")
+		} else {
+			tb.Skipf("Skipping for HANA: %s", reason)
+		}
+	}
+}
+
 // buildMongoDBURIOpts represents buildMongoDBURI's options.
 type buildMongoDBURIOpts struct {
 	host           string

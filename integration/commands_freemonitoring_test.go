@@ -26,6 +26,7 @@ import (
 )
 
 func TestCommandsFreeMonitoringGetFreeMonitoringStatus(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	s := setup.SetupWithOpts(t, &setup.SetupOpts{
 		DatabaseName: "admin",
@@ -51,6 +52,7 @@ func TestCommandsFreeMonitoringGetFreeMonitoringStatus(t *testing.T) {
 }
 
 func TestCommandsFreeMonitoringSetFreeMonitoring(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	s := setup.SetupWithOpts(t, &setup.SetupOpts{
 		DatabaseName: "admin",

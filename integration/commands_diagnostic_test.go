@@ -33,6 +33,7 @@ import (
 )
 
 func TestCommandsDiagnosticConnectionStatus(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	ctx, collection := setup.Setup(t)
 
@@ -46,6 +47,7 @@ func TestCommandsDiagnosticConnectionStatus(t *testing.T) {
 }
 
 func TestCommandsDiagnosticExplain(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	s := setup.SetupWithOpts(t, &setup.SetupOpts{
 		Providers: []shareddata.Provider{shareddata.Int32s},
@@ -118,6 +120,7 @@ func TestCommandsDiagnosticExplain(t *testing.T) {
 }
 
 func TestCommandsDiagnosticGetLog(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	res := setup.SetupWithOpts(t, &setup.SetupOpts{
 		DatabaseName: "admin",
@@ -206,6 +209,7 @@ func TestCommandsDiagnosticGetLog(t *testing.T) {
 }
 
 func TestCommandsDiagnosticHostInfo(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	ctx, collection := setup.Setup(t)
 
@@ -237,6 +241,7 @@ func TestCommandsDiagnosticHostInfo(t *testing.T) {
 }
 
 func TestCommandsDiagnosticListCommands(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	ctx, collection := setup.Setup(t)
 
@@ -256,6 +261,7 @@ func TestCommandsDiagnosticListCommands(t *testing.T) {
 }
 
 func TestCommandsDiagnosticValidate(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	ctx, collection := setup.Setup(t, shareddata.Doubles)
 
@@ -289,6 +295,7 @@ func TestCommandsDiagnosticValidate(t *testing.T) {
 }
 
 func TestCommandsDiagnosticWhatsMyURI(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Skip("https://github.com/FerretDB/FerretDB/issues/1759")
 
 	t.Parallel()

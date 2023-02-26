@@ -36,6 +36,7 @@ type insertRunCommandCompatTestCase struct {
 // testInsertRunCommandCompat tests insert compatibility test cases with invalid parameters.
 // It uses runCommand instead of insertOne or insertMany to let more invalid parameters being used.
 func testInsertRunCommandCompat(t *testing.T, testCases map[string]insertRunCommandCompatTestCase) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Helper()
 
 	for name, tc := range testCases {
@@ -100,6 +101,7 @@ func testInsertRunCommandCompat(t *testing.T, testCases map[string]insertRunComm
 }
 
 func TestInsertRunCommandCompat(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 
 	testCases := map[string]insertRunCommandCompatTestCase{

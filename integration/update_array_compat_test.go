@@ -23,6 +23,7 @@ import (
 )
 
 func TestUpdateArrayCompatPop(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
 	t.Parallel()
 
 	setup.SkipForTigrisWithReason(t, "https://github.com/FerretDB/FerretDB/issues/1834")
@@ -88,6 +89,7 @@ func TestUpdateArrayCompatPop(t *testing.T) {
 }
 
 func TestUpdateArrayCompatPush(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
 	t.Parallel()
 
 	setup.SkipForTigrisWithReason(t, "https://github.com/FerretDB/FerretDB/issues/1834")

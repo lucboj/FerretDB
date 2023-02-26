@@ -168,6 +168,7 @@ func testInsertCompat(t *testing.T, testCases map[string]insertCompatTestCase) {
 
 func TestInsertCompat(t *testing.T) {
 	t.Parallel()
+	setup.SkipForHANAWithReason(t, "not supported")
 
 	testCases := map[string]insertCompatTestCase{
 		"InsertIDArray": {

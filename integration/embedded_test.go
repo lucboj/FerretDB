@@ -33,6 +33,7 @@ import (
 
 func TestEmbedded(t *testing.T) {
 	setup.SkipForTigris(t)
+	setup.SkipForHANAWithReason(t, "not supported")
 
 	t.Parallel()
 

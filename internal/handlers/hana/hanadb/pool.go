@@ -21,7 +21,6 @@ func NewPool(ctx context.Context, url string, logger *zap.Logger) (*Pool, error)
 
 	// Check connection
 	err = pool.PingContext(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("connection to HANA instance was not established")
 	}

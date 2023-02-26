@@ -35,6 +35,7 @@ type deleteCompatTestCase struct {
 }
 
 func TestDeleteCompat(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "might be supported but takes long to run")
 	t.Parallel()
 
 	testCases := map[string]deleteCompatTestCase{
@@ -132,6 +133,7 @@ func TestDeleteCompat(t *testing.T) {
 
 // testDeleteCompat tests delete compatibility test cases.
 func testDeleteCompat(t *testing.T, testCases map[string]deleteCompatTestCase) {
+	setup.SkipForHANAWithReason(t, "might be supported but takes long to run")
 	t.Helper()
 
 	for name, tc := range testCases {

@@ -413,7 +413,7 @@ func testUpdateCurrentDateCompat(t *testing.T, testCases map[string]updateCurren
 
 func TestUpdateCompat(t *testing.T) {
 	t.Parallel()
-
+	setup.SkipForHANAWithReason(t, "not working")
 	testCases := map[string]updateCompatTestCase{
 		"UpdateEmptyDocument": {
 			update:     bson.D{},
@@ -438,6 +438,7 @@ func TestUpdateCompat(t *testing.T) {
 }
 
 func TestUpdateCompatArray(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
 	t.Parallel()
 
 	testCases := map[string]updateCompatTestCase{
@@ -456,6 +457,7 @@ func TestUpdateCompatArray(t *testing.T) {
 }
 
 func TestUpdateCompatMultiFlagCommand(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "takes long")
 	t.Parallel()
 
 	testCases := map[string]updateCommandCompatTestCase{

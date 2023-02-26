@@ -27,6 +27,7 @@ import (
 )
 
 func TestQueryBadCountType(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not implemented yet")
 	t.Parallel()
 	s := setup.SetupWithOpts(t, nil)
 

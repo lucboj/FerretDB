@@ -105,6 +105,7 @@ func testCountCompat(t *testing.T, testCases map[string]countCompatTestCase) {
 }
 
 func TestCountCompat(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "count is not implemented yet")
 	t.Parallel()
 
 	testCases := map[string]countCompatTestCase{

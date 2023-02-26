@@ -219,6 +219,18 @@ tasks:
         -records-dir=../records
         -target-port=37017
 
+  test-integration-hana:
+    desc: "Run integration tests for hana"
+    dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+    dir: integration
+    cmds:
+      - >
+        go test -count=1 {{.RACEFLAG}} -tags={{.BUILDTAGS}} -shuffle=on -coverpkg=../...
+        -coverprofile=integration-hana.txt .
+        -hanainstance-url=$hana_url
+        -records-dir=../records
+        -target-unix-socket
+
   bench-short:
     desc: "Benchmark for about 25 seconds (with default BENCHTIME)"
     cmds:

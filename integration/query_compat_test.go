@@ -41,6 +41,7 @@ type queryCompatTestCase struct {
 
 // testQueryCompat tests query compatibility test cases.
 func testQueryCompat(t *testing.T, testCases map[string]queryCompatTestCase) {
+	setup.SkipForHANAWithReason(t, "explain not implemented")
 	t.Helper()
 
 	// Use shared setup because find queries can't modify data.
@@ -148,6 +149,7 @@ func testQueryCompat(t *testing.T, testCases map[string]queryCompatTestCase) {
 // slowness of compat setup by only setting it up once
 // for all query tests.
 func TestQueryCompatRunner(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "explain not implemented")
 	t.Parallel()
 
 	testcases := map[string]map[string]queryCompatTestCase{

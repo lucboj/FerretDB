@@ -26,6 +26,7 @@ import (
 )
 
 func TestFindAndModifyCompatSimple(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	testCases := map[string]findAndModifyCompatTestCase{
 		"EmptyQueryRemove": {
 			command: bson.D{
@@ -81,6 +82,7 @@ func TestFindAndModifyCompatSimple(t *testing.T) {
 }
 
 func TestFindAndModifyCompatErrors(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	testCases := map[string]findAndModifyCompatTestCase{
 		"NotEnoughParameters": {
 			command: bson.D{},
@@ -114,6 +116,7 @@ func TestFindAndModifyCompatErrors(t *testing.T) {
 }
 
 func TestFindAndModifyCompatUpdate(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	testCases := map[string]findAndModifyCompatTestCase{
 		"Replace": {
 			command: bson.D{
@@ -175,6 +178,7 @@ func TestFindAndModifyCompatUpdate(t *testing.T) {
 }
 
 func TestFindAndModifyCompatUpsert(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	setup.SkipForTigrisWithReason(
 		t,
 		"Tigris' schema doesn't fit for most of providers, upsert for Tigris is tested in TestFindAndModifyUpsert.",
@@ -235,6 +239,7 @@ func TestFindAndModifyCompatUpsert(t *testing.T) {
 }
 
 func TestFindAndModifyCompatRemove(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	testCases := map[string]findAndModifyCompatTestCase{
 		"Remove": {
 			command: bson.D{
@@ -273,6 +278,7 @@ type findAndModifyCompatTestCase struct {
 
 // testFindAndModifyCompat tests findAndModify compatibility test cases.
 func testFindAndModifyCompat(t *testing.T, testCases map[string]findAndModifyCompatTestCase) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Helper()
 
 	for name, tc := range testCases {

@@ -142,6 +142,7 @@ func TestCommandsAdministrationCreateDropListDatabases(t *testing.T) {
 }
 
 func TestCommandsAdministrationListDatabases(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "size is not calculated correctly")
 	t.Parallel()
 	ctx, collection := setup.Setup(t, shareddata.DocumentsStrings)
 
@@ -171,6 +172,7 @@ func TestCommandsAdministrationListDatabases(t *testing.T) {
 }
 
 func TestCommandsAdministrationListCollections(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "collections not in same order when equality is checked")
 	t.Parallel()
 	ctx, targetCollections, compatCollections := setup.SetupCompat(t)
 
@@ -196,6 +198,7 @@ func TestCommandsAdministrationListCollections(t *testing.T) {
 }
 
 func TestCommandsAdministrationGetParameter(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	setup.SkipForTigris(t)
 
 	t.Parallel()
@@ -542,6 +545,7 @@ func TestCommandsAdministrationGetParameter(t *testing.T) {
 }
 
 func TestCommandsAdministrationBuildInfo(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	ctx, collection := setup.Setup(t)
 
@@ -574,6 +578,7 @@ func TestCommandsAdministrationBuildInfo(t *testing.T) {
 }
 
 func TestCommandsAdministrationCollStatsEmpty(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	ctx, collection := setup.Setup(t)
 
@@ -595,6 +600,7 @@ func TestCommandsAdministrationCollStatsEmpty(t *testing.T) {
 }
 
 func TestCommandsAdministrationCollStats(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	ctx, collection := setup.Setup(t, shareddata.DocumentsStrings)
 
@@ -616,6 +622,7 @@ func TestCommandsAdministrationCollStats(t *testing.T) {
 }
 
 func TestCommandsAdministrationDataSize(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 
 	t.Run("Existing", func(t *testing.T) {
@@ -652,6 +659,8 @@ func TestCommandsAdministrationDataSize(t *testing.T) {
 }
 
 func TestCommandsAdministrationDBStats(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
+
 	t.Parallel()
 	ctx, collection := setup.Setup(t, shareddata.DocumentsStrings)
 
@@ -675,6 +684,7 @@ func TestCommandsAdministrationDBStats(t *testing.T) {
 }
 
 func TestCommandsAdministrationDBStatsEmpty(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	ctx, collection := setup.Setup(t)
 
@@ -698,6 +708,7 @@ func TestCommandsAdministrationDBStatsEmpty(t *testing.T) {
 }
 
 func TestCommandsAdministrationDBStatsWithScale(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	ctx, collection := setup.Setup(t, shareddata.DocumentsStrings)
 
@@ -721,6 +732,7 @@ func TestCommandsAdministrationDBStatsWithScale(t *testing.T) {
 }
 
 func TestCommandsAdministrationDBStatsEmptyWithScale(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	ctx, collection := setup.Setup(t)
 
@@ -745,6 +757,7 @@ func TestCommandsAdministrationDBStatsEmptyWithScale(t *testing.T) {
 
 //nolint:paralleltest // we test a global server status
 func TestCommandsAdministrationServerStatus(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	setup.SkipForTigris(t)
 
 	ctx, collection := setup.Setup(t)
@@ -787,6 +800,7 @@ func TestCommandsAdministrationServerStatus(t *testing.T) {
 }
 
 func TestCommandsAdministrationServerStatusMetrics(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 
 	for name, tc := range map[string]struct {
@@ -858,6 +872,7 @@ func TestCommandsAdministrationServerStatusMetrics(t *testing.T) {
 }
 
 func TestCommandsAdministrationServerStatusFreeMonitoring(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	// this test shouldn't be run in parallel, because it requires a specific state of the field which would be modified by the other tests.
 	s := setup.SetupWithOpts(t, &setup.SetupOpts{
 		DatabaseName: "admin",
@@ -901,6 +916,7 @@ func TestCommandsAdministrationServerStatusFreeMonitoring(t *testing.T) {
 }
 
 func TestCommandsAdministrationServerStatusStress(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	setup.SkipForTigrisWithReason(t, "https://github.com/FerretDB/FerretDB/issues/1507")
 
 	ctx, collection := setup.Setup(t) // no providers there, we will create collections concurrently
@@ -969,6 +985,7 @@ func TestCommandsAdministrationServerStatusStress(t *testing.T) {
 }
 
 func TestCommandsAdministrationCurrentOp(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 
 	s := setup.SetupWithOpts(t, &setup.SetupOpts{

@@ -71,6 +71,7 @@ func TestFindNothing(t *testing.T) {
 
 func TestInsertFind(t *testing.T) {
 	setup.SkipForTigris(t)
+	setup.SkipForHANAWithReason(t, "Problem with values like double-max-overflow-verge")
 
 	t.Parallel()
 	providers := []shareddata.Provider{shareddata.Scalars, shareddata.Composites}
@@ -98,6 +99,7 @@ func TestInsertFind(t *testing.T) {
 
 //nolint:paralleltest // we test a global list of databases
 func TestFindCommentMethod(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "Comment is not implemented in handler `hana`")
 	setup.SkipForTigris(t)
 
 	ctx, collection := setup.Setup(t, shareddata.Scalars)
@@ -115,6 +117,7 @@ func TestFindCommentMethod(t *testing.T) {
 
 //nolint:paralleltest // we test a global list of databases
 func TestFindCommentQuery(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "Comment is not implemented in handler `hana`")
 	setup.SkipForTigris(t)
 
 	ctx, collection := setup.Setup(t, shareddata.Scalars)
@@ -130,6 +133,7 @@ func TestFindCommentQuery(t *testing.T) {
 }
 
 func TestUpdateCommentMethod(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "Comment is not implemented in handler `hana`")
 	setup.SkipForTigris(t)
 
 	t.Parallel()
@@ -157,6 +161,7 @@ func TestUpdateCommentMethod(t *testing.T) {
 }
 
 func TestUpdateCommentQuery(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "Comment is not implemented in handler `hana`")
 	setup.SkipForTigris(t)
 
 	t.Parallel()
@@ -181,6 +186,7 @@ func TestUpdateCommentQuery(t *testing.T) {
 }
 
 func TestDeleteCommentMethod(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "Comment is not implemented in handler `hana`")
 	setup.SkipForTigris(t)
 
 	t.Parallel()
@@ -206,6 +212,7 @@ func TestDeleteCommentMethod(t *testing.T) {
 }
 
 func TestDeleteCommentQuery(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "Comment is not implemented in handler `hana`")
 	setup.SkipForTigris(t)
 
 	t.Parallel()
@@ -230,6 +237,7 @@ func TestDeleteCommentQuery(t *testing.T) {
 
 func TestEmptyKey(t *testing.T) {
 	setup.SkipForTigrisWithReason(t, "Tigris field name cannot be empty")
+	setup.SkipForHANAWithReason(t, "Field name cannot be empty string")
 
 	t.Parallel()
 	ctx, collection := setup.Setup(t)
@@ -251,6 +259,7 @@ func TestEmptyKey(t *testing.T) {
 }
 
 func TestFindAndModifyCommentMethod(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "Comment is not implemented in handler `hana`")
 	setup.SkipForTigris(t)
 
 	t.Parallel()
@@ -276,6 +285,7 @@ func TestFindAndModifyCommentMethod(t *testing.T) {
 }
 
 func TestFindAndModifyCommentQuery(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "Comment is not implemented in handler `hana`")
 	setup.SkipForTigris(t)
 
 	t.Parallel()
@@ -312,7 +322,6 @@ func TestFindAndModifyCommentQuery(t *testing.T) {
 
 func TestCollectionName(t *testing.T) {
 	setup.SkipForTigris(t)
-
 	t.Parallel()
 
 	t.Run("All", func(t *testing.T) {

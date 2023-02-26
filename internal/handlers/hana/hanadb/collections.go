@@ -43,7 +43,7 @@ func (hdb *Pool) CreateCollectionIfNotExists(ctx context.Context, db, collection
 		return nil
 	}
 
-	err = hdb.createCollection(ctx, db, collection)
+	err = hdb.CreateCollection(ctx, db, collection)
 	if err != nil {
 		return lazyerrors.Error(err)
 	}
@@ -68,17 +68,31 @@ func (hdb *Pool) collectionExists(ctx context.Context, db, collection string) (b
 	return false, nil
 }
 
-// TODO: catch and use error for collection already existing
-func (hdb *Pool) createCollection(ctx context.Context, db, collection string) error {
+func (hdb *Pool) CreateCollection(ctx context.Context, db, collection string) error {
+	if !validateCollectionNameRe.MatchString(collection) ||
+		strings.HasPrefix(collection, reservedPrefix) {
+		return ErrInvalidCollectionName
+	}
+
+	_, err := hdb.CreateDatabaseIfNotExists(ctx, db)
+	if err != nil {
+		return err
+	}
+
 	sql := fmt.Sprintf("CREATE COLLECTION \"%s\".\"%s\"", db, collection)
 
-	_, err := hdb.ExecContext(ctx, sql)
+	_, err = hdb.ExecContext(ctx, sql)
+	if err != nil {
+		if strings.Contains(err.Error(), "288: cannot use duplicate table name") {
+			return ErrAlreadyExist
+		}
+	}
 
 	return err
 }
 
 func (hdb *Pool) DropCollection(ctx context.Context, db, collection string) error {
-	schemaExists, err := hdb.databaseExists(ctx, db)
+	schemaExists, err := hdb.DatabaseExists(ctx, db)
 	if err != nil {
 		return lazyerrors.Error(err)
 	}
@@ -104,8 +118,13 @@ func (hdb *Pool) DropCollection(ctx context.Context, db, collection string) erro
 }
 
 func (hdb *Pool) Collections(ctx context.Context, db string) ([]string, error) {
-	if _, err := hdb.CreateDatabaseIfNotExists(ctx, db); err != nil && err != ErrAlreadyExist {
-		return nil, lazyerrors.Errorf("Handler.msgStorage: %w", err)
+	dbExists, err := hdb.DatabaseExists(ctx, db)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	if !dbExists {
+		return []string{}, nil
 	}
 
 	sql := "SELECT TABLE_NAME FROM \"PUBLIC\".\"M_TABLES\" WHERE SCHEMA_NAME = $1 AND TABLE_TYPE = 'COLLECTION';"

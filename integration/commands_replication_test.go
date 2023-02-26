@@ -28,6 +28,7 @@ import (
 )
 
 func TestCommandsReplication(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 	ctx, collection := setup.Setup(t)
 

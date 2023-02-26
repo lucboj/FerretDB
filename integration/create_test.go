@@ -32,6 +32,7 @@ import (
 )
 
 func TestCreateStress(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported yet")
 	ctx, collection := setup.Setup(t) // no providers there, we will create collections concurrently
 	db := collection.Database()
 
@@ -110,6 +111,7 @@ func TestCreateStress(t *testing.T) {
 }
 
 func TestCreateOnInsertStressSameCollection(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported yet")
 	setup.SkipForTigrisWithReason(t, "https://github.com/FerretDB/FerretDB/issues/1341")
 	ctx, collection := setup.Setup(t)
 	db := collection.Database().Client().Database(strings.ToLower(t.Name()))
@@ -148,6 +150,7 @@ func TestCreateOnInsertStressSameCollection(t *testing.T) {
 }
 
 func TestCreateOnInsertStressDiffCollection(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported yet")
 	ctx, collection := setup.Setup(t)
 	db := collection.Database().Client().Database(strings.ToLower(t.Name()))
 
@@ -186,6 +189,7 @@ func TestCreateOnInsertStressDiffCollection(t *testing.T) {
 }
 
 func TestCreateStressSameCollection(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported yet")
 	ctx, collection := setup.Setup(t) // no providers there, we will create collection from the test
 	db := collection.Database()
 
@@ -276,6 +280,7 @@ func TestCreateStressSameCollection(t *testing.T) {
 }
 
 func TestCreateTigris(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported yet")
 	setup.TigrisOnlyWithReason(t, "Tigris-specific schema is used")
 
 	t.Parallel()

@@ -34,6 +34,7 @@ type distinctCompatTestCase struct {
 }
 
 func testDistinctCompat(t *testing.T, testCases map[string]distinctCompatTestCase) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Helper()
 
 	// Use shared setup because distinct queries can't modify data.
@@ -116,6 +117,7 @@ func testDistinctCompat(t *testing.T, testCases map[string]distinctCompatTestCas
 }
 
 func TestDistinctCompat(t *testing.T) {
+	setup.SkipForHANAWithReason(t, "not supported")
 	t.Parallel()
 
 	testCases := map[string]distinctCompatTestCase{
