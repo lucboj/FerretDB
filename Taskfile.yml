@@ -202,6 +202,20 @@ tasks:
         -compat-url=mongodb://127.0.0.1:47017/
         -records-dir=../records
 
+  test-integration-hana:
+    desc: "Run integration tests for hana"
+    dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+    dir: integration
+    cmds:
+      - >
+        go test -count=1 {{.RACEFLAG}} -tags={{.BUILDTAGS}} -shuffle=on -coverpkg=../...
+        -coverprofile=integration-hana.txt .
+        -target-backend=ferretdb-hana
+        -hanainstance-url=$hana_url
+        -records-dir=../records
+        -compat-url=mongodb://127.0.0.1:47017/
+        {{.UNIXSOCKETFLAG}}
+
   test-integration-mongodb:
     desc: "Run integration tests for MongoDB"
     dir: integration
@@ -326,7 +340,7 @@ tasks:
         --listen-addr=:27017
         --mode=diff-normal
         --hanainstance-url=$hana_url
-        --proxy-addr=127.0.0.1:37017
+        --proxy-addr=127.0.0.1:47017
         --test-records-dir=records
 
   run-proxy:
