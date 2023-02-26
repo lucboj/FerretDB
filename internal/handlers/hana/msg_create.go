@@ -16,8 +16,11 @@ package hana
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/FerretDB/FerretDB/internal/handlers/common"
+	"github.com/FerretDB/FerretDB/internal/handlers/hana/hanadb"
 	"github.com/FerretDB/FerretDB/internal/types"
 	"github.com/FerretDB/FerretDB/internal/util/lazyerrors"
 	"github.com/FerretDB/FerretDB/internal/util/must"
@@ -73,9 +76,23 @@ func (h *Handler) MsgCreate(ctx context.Context, msg *wire.OpMsg) (*wire.OpMsg, 
 		return nil, err
 	}
 
-	err = dbPool.CreateCollectionIfNotExists(ctx, db, collection)
-	if err != nil {
-		return nil, err
+	err = dbPool.CreateCollection(ctx, db, collection)
+	switch {
+	case err == nil:
+		// Nothing
+	case errors.Is(err, hanadb.ErrAlreadyExist):
+		msg := fmt.Sprintf("Collection %s.%s already exists.", db, collection)
+		return nil, common.NewCommandErrorMsg(common.ErrNamespaceExists, msg)
+
+	case errors.Is(err, hanadb.ErrInvalidDatabaseName):
+		msg := fmt.Sprintf("Invalid namespace: %s.%s", db, collection)
+		return nil, common.NewCommandErrorMsg(common.ErrInvalidNamespace, msg)
+
+	case errors.Is(err, hanadb.ErrInvalidCollectionName):
+		msg := fmt.Sprintf("Invalid collection name: '%s.%s'", db, collection)
+		return nil, common.NewCommandErrorMsg(common.ErrInvalidNamespace, msg)
+	default:
+		return nil, lazyerrors.Error(err)
 	}
 
 	var reply wire.OpMsg
