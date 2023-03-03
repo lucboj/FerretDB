@@ -1,5 +1,10 @@
 #!/bin/bash
 
+current_dir="$(dirname "$(pwd)")"
+
+echo $current_dir
+
+echo $(curent_dir)
 pwd
 
 mkdir tmpDir \
