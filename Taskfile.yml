@@ -72,6 +72,11 @@ tasks:
       - go mod tidy
       - go mod verify
 
+  install-go-hdb:
+    desc: "Install go-hdb the SAP HANA Go driver"
+    cmd:
+      - ./install-go-hdb.sh
+
   env-reset:
     desc: "Clean ALL Go and Docker data (caches, images, volumes), and reset environment"
     cmds:

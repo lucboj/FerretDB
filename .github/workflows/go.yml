@@ -46,6 +46,9 @@ jobs:
       - name: Run init
         run: bin/task init
 
+      - name: Instal go-hdb
+        run: bin/task install-go-hdb
+
       - name: Run short unit tests
         run: bin/task test-unit-short
 
