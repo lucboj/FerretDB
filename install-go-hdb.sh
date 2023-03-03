@@ -4,9 +4,6 @@ current_dir="$(dirname "$(pwd)")"
 
 echo $current_dir
 
-echo $(curent_dir)
-pwd
-
 mkdir tmpDir \
 && curl https://tools.hana.ondemand.com/additional/hanaclient-latest-linux-x64.tar.gz --output tmpDir/hanaclient.tar.gz \
 && tar -xzvf tmpDir/hanaclient.tar.gz -C tmpDir \

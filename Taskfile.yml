@@ -77,6 +77,11 @@ tasks:
     cmd:
       - ./install-go-hdb.sh
 
+  script:
+    desc: "script"
+    cmd:
+      - ./test.sh
+
   env-reset:
     desc: "Clean ALL Go and Docker data (caches, images, volumes), and reset environment"
     cmds:
