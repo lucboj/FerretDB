@@ -6,14 +6,16 @@ mkdir tmpDir \
 && curl https://tools.hana.ondemand.com/additional/hanaclient-latest-linux-x64.tar.gz --output tmpDir/hanaclient.tar.gz \
 && tar -xzvf tmpDir/hanaclient.tar.gz -C tmpDir \
 && driver/client/./hdbinst --batch --ignore=check_diskspace \
-&& mv /usr/sap/hdbclient/golang/src/SAP /usr/local/go/src/ \
+&& mv /home/runner/sap/hdbclient/golang/src/SAP /opt/hostedtoolcache/go/1.20.1/x64/src/ \
     && ( \
-        cd /usr/sap/hdbclient/golang/src/ \
+        cd home/runner/sap/hdbclient/golang/src/ \
         && go install SAP/go-hdb/driver ) \
     && rm -rf tmpDir
 
 
-export PATH=$PATH:/usr/sap/hdbclient
-export CGO_LDFLAGS=/usr/sap/hdbclient/libdbcapiHDB.so
+pwd
+
+export PATH=$PATH:/home/runner/sap/hdbclient
+export CGO_LDFLAGS=/home/runner/sap/hdbclient/libdbcapiHDB.so
 export GO111MODULE=auto
-export LD_LIBRARY_PATH=/usr/sap/hdbclient/
+export LD_LIBRARY_PATH=/home/runner/hdbclient/

@@ -42,12 +42,12 @@ jobs:
       - name: Install Task
         run: go generate -x
         working-directory: tools
-
-      - name: Run init
-        run: bin/task init
-
+      
       - name: Instal go-hdb
         run: bin/task install-go-hdb
+      
+      - name: Run init
+        run: bin/task init
 
       - name: Run short unit tests
         run: bin/task test-unit-short
