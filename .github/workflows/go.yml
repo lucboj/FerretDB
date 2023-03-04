@@ -45,9 +45,11 @@ jobs:
 
       - name: testscript1
         run: bin/task script1
+        shell: bash
 
       - name: testscript2
         run: bin/task script2
+        shell: bash
 
       - name: run script directly
         run: |
