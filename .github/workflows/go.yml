@@ -240,6 +240,7 @@ jobs:
           chmod +x install-go-hdb.sh
           ./install-go-hdb.sh "install"
         shell: bash
+        working-directory: source
 
       # Use deploy key instead of Personal Access Token (PAT) to limit access to one repository.
       # If secrets are not available (for example, for a pull request from a fork), GITHUB_TOKEN PAT is used automatically.
