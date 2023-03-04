@@ -54,7 +54,7 @@ jobs:
         run: |
           echo "/home/runner/sap/hdbclient" >> $GITHUB_PATH
           chmod +x install-go-hdb.sh
-          ./install-go-hdb.sh
+          ./install-go-hdb.sh "install"
         shell: bash
       
       - name: Run init
@@ -106,7 +106,7 @@ jobs:
         run: |
           echo "/home/runner/sap/hdbclient" >> $GITHUB_PATH
           chmod +x install-go-hdb.sh
-          ./install-go-hdb.sh
+          ./install-go-hdb.sh "install"
         shell: bash
 
       - name: Start environment
@@ -178,7 +178,7 @@ jobs:
         run: |
           echo "/home/runner/sap/hdbclient" >> $GITHUB_PATH
           chmod +x install-go-hdb.sh
-          ./install-go-hdb.sh
+          ./install-go-hdb.sh "install"
         shell: bash
 
       - name: Run linters
@@ -218,7 +218,7 @@ jobs:
         run: |
           echo "/home/runner/sap/hdbclient" >> $GITHUB_PATH
           chmod +x install-go-hdb.sh
-          ./install-go-hdb.sh
+          ./install-go-hdb.sh "install"
         shell: bash
 
       # Use deploy key instead of Personal Access Token (PAT) to limit access to one repository.

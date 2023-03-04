@@ -69,7 +69,7 @@ jobs:
         run: |
           echo "/home/runner/sap/hdbclient" >> $GITHUB_PATH
           chmod +x install-go-hdb.sh
-          ./install-go-hdb.sh
+          ./install-go-hdb.sh "install"
         shell: bash
 
       - name: Start environment
