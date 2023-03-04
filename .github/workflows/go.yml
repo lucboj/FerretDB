@@ -53,7 +53,7 @@ jobs:
         run: |
          chmod +x test.sh
          ./test.sh
-      shell: bash
+        shell: bash
       
       # - name: Instal go-hdb
       #   run: bin/task install-go-hdb
