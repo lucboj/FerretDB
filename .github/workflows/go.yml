@@ -214,6 +214,19 @@ jobs:
           echo "LD_LIBRARY_PATH=/home/runner/sap/hdbclient" >> $GITHUB_ENV
           echo "/home/runner/sap/hdbclient" >> $GITHUB_PATH
 
+      - name: investigate
+        run: |
+          echo 1
+          ls
+          cd ..
+          echo 2
+          ls
+          cd ..
+          echo 3
+          ls 
+          cd ..
+          echo 4
+
       - name: Install HANA Go driver
         run: |
           echo "/home/runner/sap/hdbclient" >> $GITHUB_PATH
