@@ -214,6 +214,13 @@ jobs:
           echo "LD_LIBRARY_PATH=/home/runner/sap/hdbclient" >> $GITHUB_ENV
           echo "/home/runner/sap/hdbclient" >> $GITHUB_PATH
 
+      - name: pre-investigate
+        run: |
+          echo 1
+          cd source
+          ls
+          echo 2
+
       - name: investigate
         run: |
           echo 1
