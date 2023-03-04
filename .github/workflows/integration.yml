@@ -25,9 +25,6 @@ env:
   GOLANGCI_LINT_CACHE: /home/runner/go/cache/lint
   GOMODCACHE: /home/runner/go/mod
   GOPROXY: https://proxy.golang.org
-  CGO_LDFLAGS: /home/runner/sap/hdbclient/libdbcapiHDB.so
-  GO111MODULE: auto
-  LD_LIBRARY_PATH: /home/runner/sap/hdbclient
 
 jobs:
   test:
@@ -60,6 +57,13 @@ jobs:
       - name: Install Task
         run: go generate -x
         working-directory: tools
+
+      - name: Set enviroment variables
+        run: |
+          echo "CGO_LDFLAGS=/home/runner/sap/hdbclient/libdbcapiHDB.so" >> $GITHUB_ENV
+          echo "GO111MODULE=auto" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=/home/runner/sap/hdbclient" >> $GITHUB_ENV
+          echo "/home/runner/sap/hdbclient" >> $GITHUB_PATH
 
       - name: Install HANA Go driver
         run: |
