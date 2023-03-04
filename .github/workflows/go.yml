@@ -43,11 +43,20 @@ jobs:
         run: go generate -x
         working-directory: tools
 
-      - name: testscript
-        run: bin/task script
+      - name: testscript1
+        run: bin/task script1
+
+      - name: testscript2
+        run: bin/task script2
+
+      - name: run script directly
+        run: |
+         chmod +x test.sh
+         ./test.sh
+      shell: bash
       
-      - name: Instal go-hdb
-        run: bin/task install-go-hdb
+      # - name: Instal go-hdb
+      #   run: bin/task install-go-hdb
       
       - name: Run init
         run: bin/task init
