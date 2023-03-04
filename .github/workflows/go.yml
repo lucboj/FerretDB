@@ -19,6 +19,9 @@ env:
   GOLANGCI_LINT_CACHE: /home/runner/go/cache/lint
   GOMODCACHE: /home/runner/go/mod
   GOPROXY: https://proxy.golang.org
+  CGO_LDFLAGS: /home/runner/sap/hdbclient/libdbcapiHDB.so
+  GO111MODULE: auto
+  LD_LIBRARY_PATH: /home/runner/sap/hdbclient
 
 jobs:
   short-test:
@@ -43,14 +46,12 @@ jobs:
         run: go generate -x
         working-directory: tools
 
-      - name: run script directly
+      - name: Install HANA Go driver
         run: |
-         chmod +x install-go-hdb.sh
-         ./install-go-hdb.sh
+          echo "/home/runner/sap/hdbclient" >> $GITHUB_PATH
+          chmod +x install-go-hdb.sh
+          ./install-go-hdb.sh
         shell: bash
-      
-      # - name: Instal go-hdb
-      #   run: bin/task install-go-hdb
       
       - name: Run init
         run: bin/task init
@@ -89,6 +90,13 @@ jobs:
       - name: Install Task
         run: go generate -x
         working-directory: tools
+
+      - name: Install HANA Go driver
+        run: |
+          echo "/home/runner/sap/hdbclient" >> $GITHUB_PATH
+          chmod +x install-go-hdb.sh
+          ./install-go-hdb.sh
+        shell: bash
 
       - name: Start environment
         run: bin/task env-up-detach
@@ -149,6 +157,13 @@ jobs:
         with:
           cache-key: lint
 
+      - name: Install HANA Go driver
+        run: |
+          echo "/home/runner/sap/hdbclient" >> $GITHUB_PATH
+          chmod +x install-go-hdb.sh
+          ./install-go-hdb.sh
+        shell: bash
+
       - name: Run linters
         uses: FerretDB/github-actions/linters@main
 
@@ -174,6 +189,13 @@ jobs:
       - name: Install Task
         run: go generate -x
         working-directory: source/tools
+
+      - name: Install HANA Go driver
+        run: |
+          echo "/home/runner/sap/hdbclient" >> $GITHUB_PATH
+          chmod +x install-go-hdb.sh
+          ./install-go-hdb.sh
+        shell: bash
 
       # Use deploy key instead of Personal Access Token (PAT) to limit access to one repository.
       # If secrets are not available (for example, for a pull request from a fork), GITHUB_TOKEN PAT is used automatically.

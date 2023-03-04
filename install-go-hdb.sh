@@ -1,25 +1,38 @@
 #!/bin/bash
 
-current_dir="$(pwd)"
+# Get GOROOT
+prefix="GOROOT=\""
+suffix="\""
+gorootStr="$(go env | grep GOROOT)"
+goroot=${gorootStr#"$prefix"}
+goroot=${goroot%"$suffix"}
 
-echo $current_dir
+# Get work directory and navigate to it
+work_dir=$(dirname $(dirname "$(pwd)"))
+cd "${work_dir}"
 
-mkdir tmpDir 
-echo 1
-curl https://tools.hana.ondemand.com/additional/hanaclient-latest-linux-x64.tar.gz --output tmpDir/hanaclient.tar.gz 
-echo 2
-tar -xzvf tmpDir/hanaclient.tar.gz -C tmpDir 
-echo 3
-tmpDir/client/./hdbinst --batch --ignore=check_diskspace
-echo 4
-mv /home/runner/sap/hdbclient/golang/src/SAP /opt/hostedtoolcache/go/1.20.1/x64/src/
-echo 5
-cd home/runner/sap/hdbclient/golang/src/ 
-echo 6
+# Create folder for downloading and installing the HANA Go driver
+mkdir hanaDriver
+
+curl https://tools.hana.ondemand.com/additional/hanaclient-latest-linux-x64.tar.gz -H 'Cookie: eula_3_1_agreed=tools.hana.ondemand.com/developer-license-3_1.txt'  --output hanaDriver/hanaclient.tar.gz
+
+tar -xzvf hanaDriver/hanaclient.tar.gz -C hanaDriver
+
+# Install HANA client
+hanaDriver/client/./hdbinst --batch --ignore=check_diskspace
+
+# Get folder where installation installed to
+install_dir=$(dirname "${work_dir}")
+
+# Move driver to GOROOT
+sudo mv "${install_dir}"/sap/hdbclient/golang/src/SAP "${goroot}"/src/
+
+cd "${install_dir}"/sap/hdbclient/golang/src
+
+# Install Go driver
 go install SAP/go-hdb/driver
-echo 7
 
-export PATH=$PATH:/home/runner/sap/hdbclient
-export CGO_LDFLAGS=/home/runner/sap/hdbclient/libdbcapiHDB.so
-export GO111MODULE=auto
-export LD_LIBRARY_PATH=/home/runner/hdbclient/
+# Remove folder for download and installation
+cd "${work_dir}"
+
+rm -rf hanaDriver
