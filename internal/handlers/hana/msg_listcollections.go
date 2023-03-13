@@ -17,11 +17,88 @@ package hana
 import (
 	"context"
 
+	"github.com/FerretDB/FerretDB/internal/handlers/common"
+	"github.com/FerretDB/FerretDB/internal/types"
+	"github.com/FerretDB/FerretDB/internal/util/lazyerrors"
 	"github.com/FerretDB/FerretDB/internal/util/must"
 	"github.com/FerretDB/FerretDB/internal/wire"
 )
 
 // MsgListCollections implements HandlerInterface.
 func (h *Handler) MsgListCollections(ctx context.Context, msg *wire.OpMsg) (*wire.OpMsg, error) {
-	return nil, notImplemented(must.NotFail(msg.Document()).Command())
+	dbPool, err := h.DBPool(ctx)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	document, err := msg.Document()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	var filter *types.Document
+	if filter, err = common.GetOptionalParam(document, "filter", filter); err != nil {
+		return nil, err
+	}
+
+	// TODO https://github.com/FerretDB/FerretDB/issues/301
+	// if err = common.UnimplementedNonDefault(document, "nameOnly", func(v any) bool {
+	// 	nameOnly, ok := v.(bool)
+	// 	return ok && !nameOnly
+	// }); err != nil {
+	// 	return nil, err
+	// }
+
+	common.Ignored(document, h.L, "comment", "authorizedCollections")
+
+	db, err := common.GetRequiredParam[string](document, "$db")
+	if err != nil {
+		return nil, err
+	}
+
+	var names []string
+
+	names, err = dbPool.Collections(ctx, db)
+	if err != nil {
+		return nil, err
+	}
+
+	collections := types.MakeArray(len(names))
+
+	for _, n := range names {
+		d := must.NotFail(types.NewDocument(
+			"name", n,
+			"type", "collection",
+		))
+
+		var matches bool
+
+		if matches, err = common.FilterDocument(d, filter); err != nil {
+			return nil, lazyerrors.Error(err)
+		}
+
+		if !matches {
+			continue
+		}
+
+		collections.Append(d)
+	}
+
+	var reply wire.OpMsg
+	err = reply.SetSections(wire.OpMsgSection{
+		Documents: []*types.Document{must.NotFail(types.NewDocument(
+			"cursor", must.NotFail(types.NewDocument(
+				"id", int64(0),
+				"ns", db+".$cmd.listCollections",
+				"firstBatch", collections,
+			)),
+			"ok", float64(1),
+		))},
+	})
+
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	return &reply, nil
 }
