@@ -26,10 +26,7 @@ import (
 // validateDatabaseNameRe validates FerretDB database / SAP HANA schema names.
 var validateDatabaseNameRe = regexp.MustCompile("^[-_a-z][-_a-z0-9]{0,62}$")
 
-// Reserved prefix for database and collection names.
-const reservedPrefix = "_ferretdb_"
-
-// Databases returns a sorted list of FerretDB databases / PostgreSQL schemas.
+// Databases returns a sorted list of FerretDB databases / SAP HANA schemas.
 func (hdb *Pool) Databases(ctx context.Context) ([]string, error) {
 	sql := "SELECT SCHEMA_NAME FROM \"PUBLIC\".\"SCHEMAS\" WHERE SCHEMA_OWNER NOT LIKE '%_SYS_%' AND NOT SCHEMA_OWNER = 'SYS';"
 	rows, err := hdb.QueryContext(ctx, sql)
@@ -60,31 +57,29 @@ func (hdb *Pool) Databases(ctx context.Context) ([]string, error) {
 // CreateDatabaseIfNotExists ensures that given database exists.
 //
 // If the database doesn't exist, it creates it.
-//
-// It returns true if the database was created.
-func (hdb *Pool) CreateDatabaseIfNotExists(ctx context.Context, db string) (bool, error) {
+func (hdb *Pool) CreateDatabaseIfNotExists(ctx context.Context, db string) error {
 	if !validateDatabaseNameRe.MatchString(db) ||
 		strings.HasPrefix(db, reservedPrefix) {
-		return false, ErrInvalidDatabaseName
+		return ErrInvalidDatabaseName
 	}
 
 	dbExists, err := hdb.DatabaseExists(ctx, db)
 	if err != nil {
-		return false, lazyerrors.Error(err)
+		return lazyerrors.Error(err)
 	}
 
 	if dbExists {
-		return true, nil
+		return nil
 	}
 
 	sql := fmt.Sprintf("CREATE SCHEMA \"%s\"", db)
 	_, err = hdb.ExecContext(ctx, sql)
 
 	if err != nil {
-		return false, lazyerrors.Error(err)
+		return lazyerrors.Error(err)
 	}
 
-	return false, nil
+	return nil
 }
 
 // DatabaseExists checks if the given database already exists.

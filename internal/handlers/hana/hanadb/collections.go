@@ -28,6 +28,48 @@ import (
 // validateCollectionNameRe validates collection names.
 var validateCollectionNameRe = regexp.MustCompile("^[a-zA-Z_-][a-zA-Z0-9_-]{0,119}$")
 
+// Collections returns a sorted list of FerretDB collection names.
+//
+// It returns (possibly wrapped) ErrSchemaNotExist if FerretDB database / SAP HANA schema does not exist.
+func (hdb *Pool) Collections(ctx context.Context, db string) ([]string, error) {
+	dbExists, err := hdb.DatabaseExists(ctx, db)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	if !dbExists {
+		return []string{}, nil
+	}
+
+	sql := "SELECT TABLE_NAME FROM \"PUBLIC\".\"M_TABLES\" WHERE SCHEMA_NAME = $1 AND TABLE_TYPE = 'COLLECTION';"
+	rows, err := hdb.QueryContext(ctx, sql, db)
+
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+	defer rows.Close()
+
+	var collections []string
+
+	for rows.Next() {
+		var name string
+		if err = rows.Scan(&name); err != nil {
+			return nil, lazyerrors.Error(err)
+		}
+
+		collections = append(collections, name)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	slices.Sort(collections)
+
+	return collections, nil
+}
+
+// collectionExists returns true if FerretDB collection exists.
 func (hdb *Pool) collectionExists(ctx context.Context, db, collection string) (bool, error) {
 	sql := fmt.Sprintf(
 		"SELECT COUNT(*) FROM \"PUBLIC\".\"M_TABLES\" "+
@@ -87,45 +129,4 @@ func (hdb *Pool) CreateCollection(ctx context.Context, db, collection string) er
 	}
 
 	return nil
-}
-
-// Collections returns a sorted list of FerretDB collection names.
-//
-// It returns (possibly wrapped) ErrSchemaNotExist if FerretDB database / PostgreSQL schema does not exist.
-func (hdb *Pool) Collections(ctx context.Context, db string) ([]string, error) {
-	dbExists, err := hdb.DatabaseExists(ctx, db)
-	if err != nil {
-		return nil, lazyerrors.Error(err)
-	}
-
-	if !dbExists {
-		return []string{}, nil
-	}
-
-	sql := "SELECT TABLE_NAME FROM \"PUBLIC\".\"M_TABLES\" WHERE SCHEMA_NAME = $1 AND TABLE_TYPE = 'COLLECTION';"
-	rows, err := hdb.QueryContext(ctx, sql, db)
-
-	if err != nil {
-		return nil, lazyerrors.Error(err)
-	}
-	defer rows.Close()
-
-	var collections []string
-
-	for rows.Next() {
-		var name string
-		if err = rows.Scan(&name); err != nil {
-			return nil, lazyerrors.Error(err)
-		}
-
-		collections = append(collections, name)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, lazyerrors.Error(err)
-	}
-
-	slices.Sort(collections)
-
-	return collections, nil
 }
