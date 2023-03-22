@@ -27,7 +27,7 @@ import (
 var validateDatabaseNameRe = regexp.MustCompile("^[-_a-z][-_a-z0-9]{0,62}$")
 
 // Databases returns a sorted list of FerretDB databases / SAP HANA schemas.
-func (hdb *Pool) Databases(ctx context.Context) ([]string, error) {
+func Databases(ctx context.Context, hdb *Pool) ([]string, error) {
 	sql := "SELECT SCHEMA_NAME FROM \"PUBLIC\".\"SCHEMAS\" WHERE SCHEMA_OWNER NOT LIKE '%_SYS_%' AND NOT SCHEMA_OWNER = 'SYS';"
 	rows, err := hdb.QueryContext(ctx, sql)
 
@@ -57,13 +57,13 @@ func (hdb *Pool) Databases(ctx context.Context) ([]string, error) {
 // CreateDatabaseIfNotExists ensures that given database exists.
 //
 // If the database doesn't exist, it creates it.
-func (hdb *Pool) CreateDatabaseIfNotExists(ctx context.Context, db string) error {
+func CreateDatabaseIfNotExists(ctx context.Context, hdb *Pool, db string) error {
 	if !validateDatabaseNameRe.MatchString(db) ||
 		strings.HasPrefix(db, reservedPrefix) {
 		return ErrInvalidDatabaseName
 	}
 
-	dbExists, err := hdb.DatabaseExists(ctx, db)
+	dbExists, err := DatabaseExists(ctx, hdb, db)
 	if err != nil {
 		return lazyerrors.Error(err)
 	}
@@ -85,7 +85,7 @@ func (hdb *Pool) CreateDatabaseIfNotExists(ctx context.Context, db string) error
 // DatabaseExists checks if the given database already exists.
 //
 // It returns true if yes and false if no.
-func (hdb *Pool) DatabaseExists(ctx context.Context, db string) (bool, error) {
+func DatabaseExists(ctx context.Context, hdb *Pool, db string) (bool, error) {
 	sql := fmt.Sprintf("SELECT COUNT(*) FROM \"PUBLIC\".\"SCHEMAS\" WHERE SCHEMA_NAME = '%s'", db)
 
 	var count int
@@ -106,10 +106,10 @@ func (hdb *Pool) DatabaseExists(ctx context.Context, db string) (bool, error) {
 //
 // The calculated sizes will not be correct as SAP HANA is an in-memory database.
 // It will only show size of what is currently in memory.
-func (hdb *Pool) TablesSize(ctx context.Context, db string) (int64, error) {
+func TablesSize(ctx context.Context, hdb *Pool, db string) (int64, error) {
 	var sizeOnDisk int64
 
-	collections, err := hdb.Collections(ctx, db)
+	collections, err := Collections(ctx, hdb, db)
 	if err != nil {
 		return 0, err
 	}

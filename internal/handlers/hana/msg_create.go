@@ -77,7 +77,7 @@ func (h *Handler) MsgCreate(ctx context.Context, msg *wire.OpMsg) (*wire.OpMsg, 
 		return nil, err
 	}
 
-	err = dbPool.CreateCollection(ctx, db, collection)
+	err = hanadb.CreateCollection(ctx, dbPool, db, collection)
 
 	switch {
 	case err == nil:

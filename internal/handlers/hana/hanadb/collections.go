@@ -31,8 +31,8 @@ var validateCollectionNameRe = regexp.MustCompile("^[a-zA-Z_-][a-zA-Z0-9_-]{0,11
 // Collections returns a sorted list of FerretDB collection names.
 //
 // It returns (possibly wrapped) ErrSchemaNotExist if FerretDB database / SAP HANA schema does not exist.
-func (hdb *Pool) Collections(ctx context.Context, db string) ([]string, error) {
-	dbExists, err := hdb.DatabaseExists(ctx, db)
+func Collections(ctx context.Context, hdb *Pool, db string) ([]string, error) {
+	dbExists, err := DatabaseExists(ctx, hdb, db)
 	if err != nil {
 		return nil, lazyerrors.Error(err)
 	}
@@ -70,7 +70,7 @@ func (hdb *Pool) Collections(ctx context.Context, db string) ([]string, error) {
 }
 
 // collectionExists returns true if FerretDB collection exists.
-func (hdb *Pool) collectionExists(ctx context.Context, db, collection string) (bool, error) {
+func collectionExists(ctx context.Context, hdb *Pool, db, collection string) (bool, error) {
 	sql := fmt.Sprintf(
 		"SELECT COUNT(*) FROM \"PUBLIC\".\"M_TABLES\" "+
 			"WHERE SCHEMA_NAME = '%s' AND table_name = '%s' AND TABLE_TYPE = 'COLLECTION'",
@@ -99,18 +99,18 @@ func (hdb *Pool) collectionExists(ctx context.Context, db, collection string) (b
 //   - ErrInvalidDatabaseName - if the given database name doesn't conform to restrictions.
 //   - ErrInvalidCollectionName - if the given collection name doesn't conform to restrictions.
 //   - ErrAlreadyExist - if a FerretDB collection with the given name already exists.
-func (hdb *Pool) CreateCollection(ctx context.Context, db, collection string) error {
+func CreateCollection(ctx context.Context, hdb *Pool, db, collection string) error {
 	if !validateCollectionNameRe.MatchString(collection) ||
 		strings.HasPrefix(collection, reservedPrefix) {
 		return ErrInvalidCollectionName
 	}
 
-	_, err := hdb.CreateDatabaseIfNotExists(ctx, db)
+	err := CreateDatabaseIfNotExists(ctx, hdb, db)
 	if err != nil {
 		return err
 	}
 
-	exists, err := hdb.collectionExists(ctx, db, collection)
+	exists, err := collectionExists(ctx, hdb, db, collection)
 	if err != nil {
 		return err
 	}

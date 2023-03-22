@@ -76,7 +76,7 @@ func (m *metadata) ensure(ctx context.Context) (tableName string, created bool, 
 		return "", false, lazyerrors.Error(err)
 	}
 
-	err = m.hdb.CreateDatabaseIfNotExists(ctx, m.db)
+	err = CreateDatabaseIfNotExists(ctx, m.hdb, m.db)
 
 	switch {
 	case err == nil:
@@ -87,7 +87,7 @@ func (m *metadata) ensure(ctx context.Context) (tableName string, created bool, 
 		return "", false, lazyerrors.Error(err)
 	}
 
-	if err = createPGTableIfNotExists(ctx, m.tx, m.db, dbMetadataTableName); err != nil {
+	if err = createPGTableIfNotExists(ctx, m.hdb, m.db, dbMetadataTableName); err != nil {
 		return "", false, lazyerrors.Error(err)
 	}
 
