@@ -16,6 +16,7 @@ package hanadb
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"regexp"
 	"strings"
@@ -31,8 +32,8 @@ var validateCollectionNameRe = regexp.MustCompile("^[a-zA-Z_-][a-zA-Z0-9_-]{0,11
 // Collections returns a sorted list of FerretDB collection names.
 //
 // It returns (possibly wrapped) ErrSchemaNotExist if FerretDB database / SAP HANA schema does not exist.
-func Collections(ctx context.Context, hdb *Pool, db string) ([]string, error) {
-	dbExists, err := DatabaseExists(ctx, hdb, db)
+func Collections(ctx context.Context, tx *sql.Tx, db string) ([]string, error) {
+	dbExists, err := DatabaseExists(ctx, tx, db)
 	if err != nil {
 		return nil, lazyerrors.Error(err)
 	}
@@ -42,7 +43,7 @@ func Collections(ctx context.Context, hdb *Pool, db string) ([]string, error) {
 	}
 
 	sql := "SELECT TABLE_NAME FROM \"PUBLIC\".\"M_TABLES\" WHERE SCHEMA_NAME = $1 AND TABLE_TYPE = 'COLLECTION';"
-	rows, err := hdb.QueryContext(ctx, sql, db)
+	rows, err := tx.QueryContext(ctx, sql, db)
 
 	if err != nil {
 		return nil, lazyerrors.Error(err)
@@ -70,7 +71,7 @@ func Collections(ctx context.Context, hdb *Pool, db string) ([]string, error) {
 }
 
 // collectionExists returns true if FerretDB collection exists.
-func collectionExists(ctx context.Context, hdb *Pool, db, collection string) (bool, error) {
+func collectionExists(ctx context.Context, tx *sql.Tx, db, collection string) (bool, error) {
 	sql := fmt.Sprintf(
 		"SELECT COUNT(*) FROM \"PUBLIC\".\"M_TABLES\" "+
 			"WHERE SCHEMA_NAME = '%s' AND table_name = '%s' AND TABLE_TYPE = 'COLLECTION'",
@@ -79,7 +80,7 @@ func collectionExists(ctx context.Context, hdb *Pool, db, collection string) (bo
 	)
 
 	var count int
-	err := hdb.QueryRowContext(ctx, sql).Scan(&count)
+	err := tx.QueryRowContext(ctx, sql).Scan(&count)
 
 	if err != nil {
 		return false, lazyerrors.Error(err)
@@ -99,34 +100,56 @@ func collectionExists(ctx context.Context, hdb *Pool, db, collection string) (bo
 //   - ErrInvalidDatabaseName - if the given database name doesn't conform to restrictions.
 //   - ErrInvalidCollectionName - if the given collection name doesn't conform to restrictions.
 //   - ErrAlreadyExist - if a FerretDB collection with the given name already exists.
-func CreateCollection(ctx context.Context, hdb *Pool, db, collection string) error {
+func CreateCollection(ctx context.Context, tx *sql.Tx, db, collection string) error {
 	if !validateCollectionNameRe.MatchString(collection) ||
 		strings.HasPrefix(collection, reservedPrefix) {
 		return ErrInvalidCollectionName
 	}
-
-	err := CreateDatabaseIfNotExists(ctx, hdb, db)
+	collection, created, err := newMetadata(tx, db, collection).ensure(ctx)
 	if err != nil {
-		return err
+		return lazyerrors.Error(err)
 	}
 
-	exists, err := collectionExists(ctx, hdb, db, collection)
-	if err != nil {
-		return err
+	if !created {
+		return ErrAlreadyExist
 	}
 
-	if exists {
+	if err = createHANACollectionIfNotExists(ctx, tx, db, collection); err != nil {
+		return lazyerrors.Error(err)
+	}
+
+	// Create default index on _id field.
+	// Create index? and also does index exist?
+	// indexParams := &Index{
+	// 	Name:   "_id_",
+	// 	Key:    IndexKey{{Field: "_id", Order: IndexOrderAsc}},
+	// 	Unique: true,
+	// }
+
+	// if err := createIndex(ctx, tx, db, collection, indexParams); err != nil {
+	// 	return lazyerrors.Error(err)
+	// }
+
+	return nil
+}
+
+// createHANACollectionIfNotExists creates the given SAP HANA collection in the given schema if the collection doesn't exist.
+// If the collection already exists, it does nothing.
+//
+// If a SAP HANA conflict occurs it returns errTransactionConflict, and the caller could retry the transaction.
+func createHANACollectionIfNotExists(ctx context.Context, tx *sql.Tx, schema, collection string) error {
+	var err error
+
+	sql := fmt.Sprintf("CREATE COLLECTION \"%s\".\"%s\"", schema, collection)
+	if _, err = tx.ExecContext(ctx, sql); err == nil {
 		return nil
 	}
 
-	sql := fmt.Sprintf("CREATE COLLECTION \"%s\".\"%s\"", db, collection)
-
-	_, err = hdb.ExecContext(ctx, sql)
 	if err != nil {
 		if strings.Contains(err.Error(), "288: cannot use duplicate table name") {
 			return ErrAlreadyExist
 		}
 	}
 
-	return nil
+	return lazyerrors.Error(err)
 }

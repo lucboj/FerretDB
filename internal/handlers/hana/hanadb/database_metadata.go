@@ -16,6 +16,7 @@ package hanadb
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/FerretDB/FerretDB/internal/types"
@@ -28,23 +29,23 @@ const (
 	// Reserved prefix for database and collection names.
 	reservedPrefix = "_ferretdb_"
 
-	// Database metadata table name.
-	dbMetadataTableName = reservedPrefix + "database_metadata"
+	// Database metadata collection name.
+	dbMetadataCollectionName = reservedPrefix + "database_metadata"
 )
 
 // metadata is a type to structure methods that work with metadata storing and getting.
 //
 // Metadata consists of collections and indexes settings.
 type metadata struct {
-	hdb        *Pool
+	tx         *sql.Tx
 	db         string
 	collection string
 }
 
 // newMetadata returns a new instance of metadata for the given transaction, database and collection names.
-func newMetadata(hdb *Pool, db, collection string) *metadata {
+func newMetadata(tx *sql.Tx, db, collection string) *metadata {
 	return &metadata{
-		hdb:        hdb,
+		tx:         tx,
 		db:         db,
 		collection: collection,
 	}
@@ -54,29 +55,29 @@ func newMetadata(hdb *Pool, db, collection string) *metadata {
 // If such metadata don't exist, it creates them, including the creation of the SAP HANA schema if needed.
 // If metadata were created, it returns true as the second return value. If metadata already existed, it returns false.
 //
-// It makes a document with _id and table fields and stores it in the dbMetadataTableName table.
+// It makes a document with _id and collection fields and stores it in the dbMetadataCollectionName collection.
 // The given FerretDB collection name is stored in the _id field,
-// the corresponding SAP HANA collection name is stored in the table field.
+// the corresponding SAP HANA collection name is stored in the collection field.
 // For _id field it creates unique index.
 //
 // It returns a possibly wrapped error:
 //   - ErrInvalidDatabaseName - if the given database name doesn't conform to restrictions.
-//   - *transactionConflictError - if a PostgreSQL conflict occurs (the caller could retry the transaction).
-func (m *metadata) ensure(ctx context.Context) (tableName string, created bool, err error) {
-	tableName, err = m.getTableName(ctx)
+//   - *transactionConflictError - if a SAP HANA conflict occurs (the caller could retry the transaction).
+func (m *metadata) ensure(ctx context.Context) (collectionName string, created bool, err error) {
+	collectionName, err = m.getCollectionName(ctx)
 
 	switch {
 	case err == nil:
 		// metadata already exist
 		return
 
-	case errors.Is(err, ErrTableNotExist):
+	case errors.Is(err, ErrCollectionNotExist):
 		// metadata don't exist, do nothing
 	default:
 		return "", false, lazyerrors.Error(err)
 	}
 
-	err = CreateDatabaseIfNotExists(ctx, m.hdb, m.db)
+	err = CreateDatabaseIfNotExists(ctx, m.tx, m.db)
 
 	switch {
 	case err == nil:
@@ -87,73 +88,70 @@ func (m *metadata) ensure(ctx context.Context) (tableName string, created bool, 
 		return "", false, lazyerrors.Error(err)
 	}
 
-	if err = createPGTableIfNotExists(ctx, m.hdb, m.db, dbMetadataTableName); err != nil {
+	if err = createHANACollectionIfNotExists(ctx, m.tx, m.db, dbMetadataCollectionName); err != nil {
 		return "", false, lazyerrors.Error(err)
 	}
 
-	// Index to ensure that collection name is unique
-	// if err = createPGIndexIfNotExists(ctx, m.tx, m.db, dbMetadataTableName, dbMetadataIndexName, true); err != nil {
-	// 	return "", false, lazyerrors.Error(err)
-	// }
-
-	// Need?
-	tableName = formatCollectionName(m.collection)
+	// For now SAP HANA seems to be able to store collections with same length of name and same characters,
+	// so for now m.collection will be collection name
 	metadata := must.NotFail(types.NewDocument(
 		"_id", m.collection,
-		"table", tableName,
+		"collection", collectionName,
 		"indexes", must.NotFail(types.NewArray()),
 	))
 
+	exists, err := collectionExists(ctx, m.tx, m.db, m.collection)
+
+	if exists {
+		// If metadata were created by another transaction we consider it transaction conflict error
+		// to mark that transaction should be retried.
+		return "", false, lazyerrors.Error(newTransactionConflictError(err))
+	}
+
 	err = insert(ctx, m.tx, insertParams{
-		schema: m.db,
-		table:  dbMetadataTableName,
-		doc:    metadata,
+		db:         m.db,
+		collection: dbMetadataCollectionName,
+		doc:        metadata,
 	})
 
 	switch {
 	case err == nil:
-		return tableName, true, nil
-	case errors.Is(err, ErrUniqueViolation):
-		// If metadata were created by another transaction we consider it transaction conflict error
-		// to mark that transaction should be retried.
-		return "", false, lazyerrors.Error(newTransactionConflictError(err))
+		return collectionName, true, nil
 	default:
 		return "", false, lazyerrors.Error(err)
 	}
 }
 
-// getTableName returns PostgreSQL table name for the given FerretDB database and collection.
+// getCollectionName returns SAP HANA collection name for the given FerretDB database and collection.
 //
-// If such metadata don't exist, it returns ErrTableNotExist.
-func (m *metadata) getTableName(ctx context.Context) (string, error) {
-	doc, err := m.get(ctx, false)
+// If such metadata don't exist, it returns ErrCollectionNotExist.
+func (m *metadata) getCollectionName(ctx context.Context) (string, error) {
+	doc, err := m.get(ctx)
 	if err != nil {
 		return "", lazyerrors.Error(err)
 	}
 
-	table := must.NotFail(doc.Get("table"))
+	collection := must.NotFail(doc.Get("collection"))
 
-	return table.(string), nil
+	return collection.(string), nil
 }
 
-// get returns metadata stored in the metadata table.
+// get returns metadata stored in the metadata collection.
 //
-// If such metadata don't exist, it returns ErrTableNotExist.
-func (m *metadata) get(ctx context.Context, forUpdate bool) (*types.Document, error) {
-	metadataExist, err := tableExists(ctx, m.tx, m.db, dbMetadataTableName)
+// If such metadata don't exist, it returns ErrCollectionNotExist.
+func (m *metadata) get(ctx context.Context) (*types.Document, error) {
+	metadataExist, err := collectionExists(ctx, m.tx, m.db, dbMetadataCollectionName)
 	if err != nil {
 		return nil, lazyerrors.Error(err)
 	}
 
 	if !metadataExist {
-		return nil, ErrTableNotExist
+		return nil, ErrCollectionNotExist
 	}
 
 	iterParams := &iteratorParams{
-		schema:    m.db,
-		table:     dbMetadataTableName,
-		filter:    must.NotFail(types.NewDocument("_id", m.collection)),
-		forUpdate: forUpdate,
+		db:         m.db,
+		collection: dbMetadataCollectionName,
 	}
 
 	iter, err := buildIterator(ctx, m.tx, iterParams)
@@ -171,37 +169,8 @@ func (m *metadata) get(ctx context.Context, forUpdate bool) (*types.Document, er
 		return doc, nil
 	case errors.Is(err, iterator.ErrIteratorDone):
 		// no metadata found for the given collection name
-		return nil, ErrTableNotExist
+		return nil, ErrCollectionNotExist
 	default:
 		return nil, lazyerrors.Error(err)
 	}
-}
-
-// set sets metadata for the given database and collection.
-//
-// To avoid data race, set should be called only after getMetadata with forUpdate = true is called,
-// so that the metadata table is locked correctly.
-func (m *metadata) set(ctx context.Context, doc *types.Document) error {
-	if _, err := setById(ctx, m.tx, m.db, dbMetadataTableName, "", m.collection, doc); err != nil {
-		return lazyerrors.Error(err)
-	}
-
-	return nil
-}
-
-// remove removes metadata.
-//
-// If such metadata don't exist, it doesn't return an error.
-func (m *metadata) remove(ctx context.Context) error {
-	_, err := deleteByIDs(ctx, m.tx, execDeleteParams{
-		schema: m.db,
-		table:  dbMetadataTableName,
-	}, []any{m.collection},
-	)
-
-	if err == nil {
-		return nil
-	}
-
-	return lazyerrors.Error(err)
 }

@@ -29,9 +29,9 @@ import (
 	"github.com/FerretDB/FerretDB/internal/util/state"
 )
 
-// notImplemented returns error for stub command handlers.
+// notImplemented returns error for commands still not implemented.
 func notImplemented(command string) error {
-	return commonerrors.NewCommandErrorMsg(commonerrors.ErrNotImplemented, "I'm a stub, not a real handler for "+command)
+	return commonerrors.NewCommandErrorMsg(commonerrors.ErrNotImplemented, "Following command has not been implemented yet: "+command)
 }
 
 // Handler implements handlers.Interface on top of SAP HANA.
@@ -71,7 +71,7 @@ func (h *Handler) Close() {
 	defer h.rw.Unlock()
 
 	for k, p := range h.pools {
-		p.Close()
+		p.DB.Close()
 		delete(h.pools, k)
 	}
 }

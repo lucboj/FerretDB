@@ -16,8 +16,10 @@ package hana
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/FerretDB/FerretDB/internal/handlers/common"
+	"github.com/FerretDB/FerretDB/internal/handlers/hana/hanadb"
 	"github.com/FerretDB/FerretDB/internal/types"
 	"github.com/FerretDB/FerretDB/internal/util/lazyerrors"
 	"github.com/FerretDB/FerretDB/internal/util/must"
@@ -50,51 +52,50 @@ func (h *Handler) MsgListDatabases(ctx context.Context, msg *wire.OpMsg) (*wire.
 
 	var totalSize int64
 	var databases *types.Array
-
-	databaseNames, err := dbPool.Databases(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	databases = types.MakeArray(len(databaseNames))
-
-	for _, databaseName := range databaseNames {
-		var sizeOnDisk int64
-
-		sizeOnDisk, err = dbPool.TablesSize(ctx, databaseName)
+	err = dbPool.InTransaction(ctx, func(tx *sql.Tx) error {
+		var databaseNames []string
+		var err error
+		databaseNames, err = hanadb.Databases(ctx, tx)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		totalSize += sizeOnDisk
+		databases = types.MakeArray(len(databaseNames))
+		for _, databaseName := range databaseNames {
+			var sizeOnDisk int64
+			sizeOnDisk, err = hanadb.CollectionsSize(ctx, tx, databaseName)
+			if err != nil {
+				return err
+			}
 
-		d := must.NotFail(types.NewDocument(
-			"name", databaseName,
-			"sizeOnDisk", sizeOnDisk,
-			"empty", sizeOnDisk == 0,
-		))
+			totalSize += sizeOnDisk
 
-		var matches bool
-
-		matches, err = common.FilterDocument(d, filter)
-		if err != nil {
-			return nil, err
-		}
-
-		if !matches {
-			continue
-		}
-
-		if nameOnly {
-			d = must.NotFail(types.NewDocument(
+			d := must.NotFail(types.NewDocument(
 				"name", databaseName,
+				"sizeOnDisk", sizeOnDisk,
+				"empty", sizeOnDisk == 0,
 			))
+
+			matches, err := common.FilterDocument(d, filter)
+			if err != nil {
+				return err
+			}
+
+			if !matches {
+				continue
+			}
+
+			if nameOnly {
+				d = must.NotFail(types.NewDocument(
+					"name", databaseName,
+				))
+			}
+
+			databases.Append(d)
 		}
 
-		databases.Append(d)
-	}
-
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -16,6 +16,7 @@ package hana
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
@@ -77,24 +78,31 @@ func (h *Handler) MsgCreate(ctx context.Context, msg *wire.OpMsg) (*wire.OpMsg, 
 		return nil, err
 	}
 
-	err = hanadb.CreateCollection(ctx, dbPool, db, collection)
+	err = dbPool.InTransactionRetry(ctx, func(tx *sql.Tx) error {
+		err = hanadb.CreateCollection(ctx, tx, db, collection)
 
-	switch {
-	case err == nil:
-		// Nothing
-	case errors.Is(err, hanadb.ErrAlreadyExist):
-		msg := fmt.Sprintf("Collection %s.%s already exists.", db, collection)
-		return nil, commonerrors.NewCommandErrorMsg(commonerrors.ErrNamespaceExists, msg)
+		switch {
+		case err == nil:
+			return nil
 
-	case errors.Is(err, hanadb.ErrInvalidDatabaseName):
-		msg := fmt.Sprintf("Invalid namespace: %s.%s", db, collection)
-		return nil, commonerrors.NewCommandErrorMsg(commonerrors.ErrInvalidNamespace, msg)
+		case errors.Is(err, hanadb.ErrAlreadyExist):
+			msg := fmt.Sprintf("Collection %s.%s already exists.", db, collection)
+			return commonerrors.NewCommandErrorMsg(commonerrors.ErrNamespaceExists, msg)
 
-	case errors.Is(err, hanadb.ErrInvalidCollectionName):
-		msg := fmt.Sprintf("Invalid collection name: '%s.%s'", db, collection)
-		return nil, commonerrors.NewCommandErrorMsg(commonerrors.ErrInvalidNamespace, msg)
-	default:
-		return nil, lazyerrors.Error(err)
+		case errors.Is(err, hanadb.ErrInvalidDatabaseName):
+			msg := fmt.Sprintf("Invalid namespace: %s.%s", db, collection)
+			return commonerrors.NewCommandErrorMsg(commonerrors.ErrInvalidNamespace, msg)
+
+		case errors.Is(err, hanadb.ErrInvalidCollectionName):
+			msg := fmt.Sprintf("Invalid collection name: '%s.%s'", db, collection)
+			return commonerrors.NewCommandErrorMsg(commonerrors.ErrInvalidNamespace, msg)
+
+		default:
+			return lazyerrors.Error(err)
+		}
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	var reply wire.OpMsg

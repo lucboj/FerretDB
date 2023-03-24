@@ -25,11 +25,13 @@ import (
 
 // Pool represents SAP HANA concurrency-safe connection pool.
 type Pool struct {
-	*sql.DB
+	DB *sql.DB
+	l  *zap.Logger
 }
 
 // NewPool returns a new concurrency-safe connection pool.
 func NewPool(ctx context.Context, url string, logger *zap.Logger) (*Pool, error) {
+	fmt.Println(url)
 	pool, err := sql.Open("hdb", url)
 	if err != nil {
 		return nil, fmt.Errorf("hanadb.NewPool: %w", err)
@@ -43,6 +45,7 @@ func NewPool(ctx context.Context, url string, logger *zap.Logger) (*Pool, error)
 
 	res := &Pool{
 		DB: pool,
+		l:  logger,
 	}
 
 	return res, nil

@@ -16,8 +16,11 @@ package hana
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/FerretDB/FerretDB/internal/handlers/common"
+	"github.com/FerretDB/FerretDB/internal/handlers/hana/hanadb"
 	"github.com/FerretDB/FerretDB/internal/types"
 	"github.com/FerretDB/FerretDB/internal/util/lazyerrors"
 	"github.com/FerretDB/FerretDB/internal/util/must"
@@ -58,7 +61,16 @@ func (h *Handler) MsgListCollections(ctx context.Context, msg *wire.OpMsg) (*wir
 
 	var names []string
 
-	names, err = dbPool.Collections(ctx, db)
+	err = dbPool.InTransaction(ctx, func(tx *sql.Tx) error {
+		var err error
+
+		names, err = hanadb.Collections(ctx, tx, db)
+		if err != nil && !errors.Is(err, hanadb.ErrSchemaNotExist) {
+			return lazyerrors.Error(err)
+		}
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
