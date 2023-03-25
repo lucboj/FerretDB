@@ -19,7 +19,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/FerretDB/FerretDB/internal/handlers/pg/pjson"
+	"github.com/FerretDB/FerretDB/internal/handlers/hana/hjson"
 	"github.com/FerretDB/FerretDB/internal/types"
 	"github.com/FerretDB/FerretDB/internal/util/lazyerrors"
 	"github.com/FerretDB/FerretDB/internal/util/must"
@@ -39,7 +39,7 @@ type insertParams struct {
 func insert(ctx context.Context, tx *sql.Tx, p insertParams) error {
 	sql := fmt.Sprintf("INSERT INTO \"%s\".\"%s\" VALUES ($1)", p.db, p.collection)
 
-	_, err := tx.ExecContext(ctx, sql, must.NotFail(pjson.Marshal(p.doc)))
+	_, err := tx.ExecContext(ctx, sql, must.NotFail(hjson.Marshal(p.doc)))
 	if err == nil {
 		return nil
 	}

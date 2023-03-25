@@ -21,7 +21,7 @@ import (
 	"runtime/pprof"
 	"sync"
 
-	"github.com/FerretDB/FerretDB/internal/handlers/pg/pjson"
+	"github.com/FerretDB/FerretDB/internal/handlers/hana/hjson"
 	"github.com/FerretDB/FerretDB/internal/types"
 	"github.com/FerretDB/FerretDB/internal/util/debugbuild"
 	"github.com/FerretDB/FerretDB/internal/util/iterator"
@@ -50,7 +50,7 @@ type queryIterator struct {
 func newIterator(ctx context.Context, rows *sql.Rows, p *iteratorParams) types.DocumentsIterator {
 	unmarshalFunc := p.unmarshal
 	if unmarshalFunc == nil {
-		unmarshalFunc = pjson.Unmarshal
+		unmarshalFunc = hjson.Unmarshal
 	}
 
 	iter := &queryIterator{

@@ -109,6 +109,8 @@ func fromHJSON(v hjsontype) any {
 	switch v := v.(type) {
 	case *documentType:
 		return pointer.To(types.Document(*v))
+	case *arrayType:
+		return pointer.To(types.Array(*v))
 	case *stringType:
 		return string(*v)
 	}
@@ -121,6 +123,8 @@ func toHJSON(v any) hjsontype {
 	switch v := v.(type) {
 	case *types.Document:
 		return pointer.To(documentType(*v))
+	case *types.Array:
+		return pointer.To(arrayType(*v))
 	case string:
 		return pointer.To(stringType(v))
 	}

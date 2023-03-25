@@ -96,7 +96,7 @@ func (m *metadata) ensure(ctx context.Context) (collectionName string, created b
 	// so for now m.collection will be collection name
 	metadata := must.NotFail(types.NewDocument(
 		"_id", m.collection,
-		"collection", collectionName,
+		"collection", m.collection,
 		"indexes", must.NotFail(types.NewArray()),
 	))
 
@@ -116,7 +116,7 @@ func (m *metadata) ensure(ctx context.Context) (collectionName string, created b
 
 	switch {
 	case err == nil:
-		return collectionName, true, nil
+		return m.collection, true, nil
 	default:
 		return "", false, lazyerrors.Error(err)
 	}

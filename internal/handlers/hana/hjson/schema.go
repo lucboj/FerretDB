@@ -25,7 +25,7 @@ import (
 	"github.com/FerretDB/FerretDB/internal/util/must"
 )
 
-// schema describes document/object schema needed to unmarshal pjson document.
+// schema describes document/object schema needed to unmarshal hjson document.
 type schema struct {
 	Properties map[string]*elem `json:"p"`  // document's properties
 	Keys       []string         `json:"&k"` // to preserve properties' order
@@ -60,7 +60,7 @@ const (
 	elemTypeLong      elemType = "long"
 )
 
-// GetTypeOfValue returns pjson type of supported value.
+// GetTypeOfValue returns hjson type of supported value.
 func GetTypeOfValue(v any) string {
 	switch v.(type) {
 	case *types.Document:
@@ -232,7 +232,7 @@ func marshalElemForSingleValue(value any) ([]byte, error) {
 		buf.WriteString(`{"t":"long"}`)
 
 	default:
-		panic(fmt.Sprintf("pjson.marshalElemForSingleValue: unknown type %[1]T (value %[1]q)", val))
+		panic(fmt.Sprintf("hjson.marshalElemForSingleValue: unknown type %[1]T (value %[1]q)", val))
 	}
 
 	return buf.Bytes(), nil

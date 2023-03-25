@@ -20,17 +20,16 @@ import (
 
 	"github.com/FerretDB/FerretDB/internal/types"
 	"github.com/FerretDB/FerretDB/internal/util/lazyerrors"
-	"github.com/FerretDB/FerretDB/internal/util/must"
 )
 
-// documentType represents BSON Document type.
-type documentType types.Document
+// arrayType represents BSON Array type.
+type arrayType types.Array
 
 // hjsontype implements hjsontype interface.
-func (doc *documentType) hjsontype() {}
+func (a *arrayType) hjsontype() {}
 
 // UnmarshalJSONWithSchema unmarshals the JSON data with the given schema.
-func (doc *documentType) UnmarshalJSONWithSchema(data []byte, sch *schema) error {
+func (a *arrayType) UnmarshalJSONWithSchema(data []byte, schemas []*elem) error {
 	if bytes.Equal(data, []byte("null")) {
 		panic("null data")
 	}
@@ -38,7 +37,7 @@ func (doc *documentType) UnmarshalJSONWithSchema(data []byte, sch *schema) error
 	r := bytes.NewReader(data)
 	dec := json.NewDecoder(r)
 
-	var rawMessages map[string]json.RawMessage
+	var rawMessages []json.RawMessage
 	if err := dec.Decode(&rawMessages); err != nil {
 		return lazyerrors.Error(err)
 	}
@@ -47,74 +46,51 @@ func (doc *documentType) UnmarshalJSONWithSchema(data []byte, sch *schema) error
 		return lazyerrors.Error(err)
 	}
 
-	if len(rawMessages) == 0 {
-		*doc = documentType{}
-		return nil
+	if len(rawMessages) > 0 && schemas == nil {
+		return lazyerrors.Errorf("hjson.arrayType.UnmarshalJSON: array schema is nil for non-empty array")
 	}
 
-	if sch == nil {
-		return lazyerrors.Errorf("document schema is nil for non-empty document")
-	}
-
-	if len(sch.Keys) != len(rawMessages) {
-		return lazyerrors.Errorf("hjson.documentType.UnmarshalJSON: %d elements in &k in the schema, %d in the document",
-			len(sch.Keys), len(rawMessages),
+	if len(schemas) != len(rawMessages) {
+		return lazyerrors.Errorf("hjson.arrayType.UnmarshalJSON: %d elements in schema, %d in total",
+			len(schemas), len(rawMessages),
 		)
 	}
 
-	td := must.NotFail(types.NewDocument())
+	ta := types.MakeArray(len(rawMessages))
 
-	for _, key := range sch.Keys {
-		b, ok := rawMessages[key]
-
-		if !ok {
-			return lazyerrors.Errorf("hjson.documentType.UnmarshalJSON: missing key %q", key)
-		}
-
-		v, err := unmarshalSingleValue(b, sch.Properties[key])
+	for i, el := range rawMessages {
+		v, err := unmarshalSingleValue(el, schemas[i])
 		if err != nil {
 			return lazyerrors.Error(err)
 		}
 
-		td.Set(key, v)
+		ta.Append(v)
 	}
 
-	*doc = documentType(*td)
+	*a = arrayType(*ta)
 
 	return nil
 }
 
 // MarshalJSON implements hjsontype interface.
-func (doc *documentType) MarshalJSON() ([]byte, error) {
-	td := types.Document(*doc)
-
+func (a *arrayType) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
+	buf.WriteByte('[')
 
-	buf.WriteString(`{`)
+	ta := types.Array(*a)
+	l := ta.Len()
 
-	keys := td.Keys()
-
-	for i, key := range keys {
-		if i > 0 {
+	for i := 0; i < l; i++ {
+		if i != 0 {
 			buf.WriteByte(',')
 		}
 
-		var b []byte
-		var err error
-
-		if b, err = json.Marshal(key); err != nil {
-			return nil, lazyerrors.Error(err)
-		}
-
-		buf.Write(b)
-		buf.WriteByte(':')
-
-		value, err := td.Get(key)
+		el, err := ta.Get(i)
 		if err != nil {
 			return nil, lazyerrors.Error(err)
 		}
 
-		b, err = MarshalSingleValue(value)
+		b, err := MarshalSingleValue(el)
 		if err != nil {
 			return nil, lazyerrors.Error(err)
 		}
@@ -122,12 +98,12 @@ func (doc *documentType) MarshalJSON() ([]byte, error) {
 		buf.Write(b)
 	}
 
-	buf.WriteByte('}')
+	buf.WriteByte(']')
 
 	return buf.Bytes(), nil
 }
 
 // check interfaces
 var (
-	_ hjsontype = (*documentType)(nil)
+	_ hjsontype = (*arrayType)(nil)
 )

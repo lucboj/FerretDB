@@ -23,7 +23,7 @@ import (
 // nullType represents BSON Null type.
 type nullType types.NullType
 
-// pjsontype implements pjsontype interface.
+// hjsontype implements hjsontype interface.
 func (*nullType) hjsontype() {}
 
 // UnmarshalJSON implements json.Unmarshaler interface.
@@ -32,7 +32,7 @@ func (*nullType) UnmarshalJSON(data []byte) error {
 	panic(fmt.Sprintf("must not be called, was called with %s", string(data)))
 }
 
-// MarshalJSON implements pjsontype interface.
+// MarshalJSON implements hjsontype interface.
 func (*nullType) MarshalJSON() ([]byte, error) {
 	return []byte("null"), nil
 }

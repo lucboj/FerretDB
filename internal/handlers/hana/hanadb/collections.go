@@ -118,18 +118,6 @@ func CreateCollection(ctx context.Context, tx *sql.Tx, db, collection string) er
 		return lazyerrors.Error(err)
 	}
 
-	// Create default index on _id field.
-	// Create index? and also does index exist?
-	// indexParams := &Index{
-	// 	Name:   "_id_",
-	// 	Key:    IndexKey{{Field: "_id", Order: IndexOrderAsc}},
-	// 	Unique: true,
-	// }
-
-	// if err := createIndex(ctx, tx, db, collection, indexParams); err != nil {
-	// 	return lazyerrors.Error(err)
-	// }
-
 	return nil
 }
 
@@ -141,6 +129,7 @@ func createHANACollectionIfNotExists(ctx context.Context, tx *sql.Tx, schema, co
 	var err error
 
 	sql := fmt.Sprintf("CREATE COLLECTION \"%s\".\"%s\"", schema, collection)
+
 	if _, err = tx.ExecContext(ctx, sql); err == nil {
 		return nil
 	}

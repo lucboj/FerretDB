@@ -24,7 +24,7 @@ import (
 // stringType represents BSON UTF-8 string type.
 type stringType string
 
-// pjsontype implements pjsontype interface.
+// hjsontype implements hjsontype interface.
 func (str *stringType) hjsontype() {}
 
 // UnmarshalJSON implements json.Unmarshaler interface.
@@ -50,7 +50,7 @@ func (str *stringType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// MarshalJSON implements pjsontype interface.
+// MarshalJSON implements hjsontype interface.
 func (str *stringType) MarshalJSON() ([]byte, error) {
 	res, err := json.Marshal(string(*str))
 	if err != nil {
