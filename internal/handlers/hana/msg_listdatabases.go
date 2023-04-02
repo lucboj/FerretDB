@@ -54,7 +54,7 @@ func (h *Handler) MsgListDatabases(ctx context.Context, msg *wire.OpMsg) (*wire.
 	var databases *types.Array
 	err = dbPool.InTransaction(ctx, func(tx *sql.Tx) error {
 		var databaseNames []string
-		var err error
+
 		databaseNames, err = hanadb.Databases(ctx, tx)
 		if err != nil {
 			return err
@@ -76,7 +76,9 @@ func (h *Handler) MsgListDatabases(ctx context.Context, msg *wire.OpMsg) (*wire.
 				"empty", sizeOnDisk == 0,
 			))
 
-			matches, err := common.FilterDocument(d, filter)
+			var matches bool
+
+			matches, err = common.FilterDocument(d, filter)
 			if err != nil {
 				return err
 			}
@@ -96,6 +98,7 @@ func (h *Handler) MsgListDatabases(ctx context.Context, msg *wire.OpMsg) (*wire.
 
 		return nil
 	})
+
 	if err != nil {
 		return nil, err
 	}

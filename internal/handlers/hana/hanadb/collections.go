@@ -105,6 +105,7 @@ func CreateCollection(ctx context.Context, tx *sql.Tx, db, collection string) er
 		strings.HasPrefix(collection, reservedPrefix) {
 		return ErrInvalidCollectionName
 	}
+
 	collection, created, err := newMetadata(tx, db, collection).ensure(ctx)
 	if err != nil {
 		return lazyerrors.Error(err)
@@ -132,12 +133,8 @@ func createHANACollectionIfNotExists(ctx context.Context, tx *sql.Tx, schema, co
 
 	if _, err = tx.ExecContext(ctx, sql); err == nil {
 		return nil
-	}
-
-	if err != nil {
-		if strings.Contains(err.Error(), "288: cannot use duplicate table name") {
-			return ErrAlreadyExist
-		}
+	} else if strings.Contains(err.Error(), "288: cannot use duplicate table name") {
+		return ErrAlreadyExist
 	}
 
 	return lazyerrors.Error(err)

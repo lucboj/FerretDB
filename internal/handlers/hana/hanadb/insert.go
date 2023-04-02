@@ -45,5 +45,4 @@ func insert(ctx context.Context, tx *sql.Tx, p insertParams) error {
 	}
 
 	return lazyerrors.Error(err)
-
 }

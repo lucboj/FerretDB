@@ -31,7 +31,10 @@ import (
 
 // notImplemented returns error for commands still not implemented.
 func notImplemented(command string) error {
-	return commonerrors.NewCommandErrorMsg(commonerrors.ErrNotImplemented, "Following command has not been implemented yet: "+command)
+	return commonerrors.NewCommandErrorMsg(
+		commonerrors.ErrNotImplemented,
+		"Following command has not been implemented yet: "+command,
+	)
 }
 
 // Handler implements handlers.Interface on top of SAP HANA.

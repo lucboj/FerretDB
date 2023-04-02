@@ -62,8 +62,6 @@ func (h *Handler) MsgListCollections(ctx context.Context, msg *wire.OpMsg) (*wir
 	var names []string
 
 	err = dbPool.InTransaction(ctx, func(tx *sql.Tx) error {
-		var err error
-
 		names, err = hanadb.Collections(ctx, tx, db)
 		if err != nil && !errors.Is(err, hanadb.ErrSchemaNotExist) {
 			return lazyerrors.Error(err)

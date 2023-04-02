@@ -103,7 +103,7 @@ func DatabaseExists(ctx context.Context, tx *sql.Tx, db string) (bool, error) {
 	return false, nil
 }
 
-// collectionsSize returns the sum of sizes of all collections in the given database in bytes.
+// CollectionsSize returns the sum of sizes of all collections in the given database in bytes.
 //
 // The calculated sizes will not be correct as SAP HANA is an in-memory database.
 // It will only show size of what is currently in memory.

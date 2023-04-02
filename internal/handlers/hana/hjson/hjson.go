@@ -216,13 +216,13 @@ func unmarshalSingleValue(data []byte, sch *elem) (any, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	if err := checkConsumed(dec, r); err != nil {
+	if err = checkConsumed(dec, r); err != nil {
 		return nil, lazyerrors.Error(err)
 	}
 
 	var res hjsontype
 
-	switch sch.Type {
+	switch sch.Type { //nolint:exhaustive // ignore till fully implemented
 	case elemTypeObject:
 		if sch.Schema == nil {
 			return nil, lazyerrors.Errorf("hjson.unmarshalSingleValue: schema is not set")

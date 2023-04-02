@@ -50,6 +50,7 @@ func (e *transactionConflictError) Error() string {
 // for example, errors.Is(err, ErrSchemaNotExist).
 func (hdb *Pool) InTransaction(ctx context.Context, f func(*sql.Tx) error) (err error) {
 	var tx *sql.Tx
+
 	if tx, err = hdb.DB.BeginTx(ctx, nil); err != nil {
 		err = lazyerrors.Error(err)
 		return
@@ -89,6 +90,7 @@ func (hdb *Pool) InTransaction(ctx context.Context, f func(*sql.Tx) error) (err 
 	}
 
 	committed = true
+
 	return
 }
 
